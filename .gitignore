@@ -1,0 +1,20 @@
+# IntelliJ
+.idea/
+*.iml
+
+# Maven
+target/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Java
+*.class
+
+htmlReport/
+SearchEngine.iml
+
+.env
