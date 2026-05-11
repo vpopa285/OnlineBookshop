@@ -3,7 +3,8 @@ CREATE TABLE users (
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(120) NOT NULL UNIQUE,
     password TEXT NOT NULL,
-    amount NUMERIC(10,2) DEFAULT 0
+    amount NUMERIC(10,2) DEFAULT 0,
+    restrictions BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE user_wallet (
