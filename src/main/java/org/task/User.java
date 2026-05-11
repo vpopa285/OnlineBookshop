@@ -20,25 +20,23 @@ public class User {
 
     private static long COUNTER = 0;
 
-    public User(String username, String email, String password) {
-        id = COUNTER++;
-
-        this.username = username;
-        this.email = email;
-        this.password = password;
-
-        purchasedBooks = new HashSet<>();
-    }
-
-    public User(String username, String email, String password, double amount) {
-        id = COUNTER++;
-
+    public User(long id, String username, String email, String password, double amount, boolean restriction) {
+        this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.amount = amount;
+        this.restriction = restriction;
 
         purchasedBooks = new HashSet<>();
+    }
+
+    public User(String username, String email, String password) {
+        this(COUNTER++, username, email, password, 0, false);
+    }
+
+    public User(String username, String email, String password, double amount) {
+        this(COUNTER++, username, email, password, amount, false);
     }
 
     public void addFunds(double value) {

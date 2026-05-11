@@ -18,15 +18,19 @@ public class Book {
 
     private static long COUNTER = 0;
 
-    public Book(String title, String author, String genre, String content, double price) {
+    public Book(long id, String title, String author, String genre, String content, double price) {
+        this.id = id;
         this.title = title;
         this.author = author;
         this.genre = genre;
         this.content = content;
         this.price = price;
-        reviews = new ArrayList<>();
 
-        id = COUNTER++;
+        reviews = new ArrayList<>();
+    }
+
+    public Book(String title, String author, String genre, String content, double price) {
+        this(COUNTER++, title, author, genre, content, price);
     }
 
     public String viewBook() {
