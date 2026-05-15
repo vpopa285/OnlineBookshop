@@ -1,7 +1,9 @@
-package org.task;
+package org.task.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.task.Library;
+import org.task.SearchType;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,7 +16,7 @@ public class User {
     private final String password;
     private double amount;
     @Setter
-    private boolean restriction = false;
+    private boolean restriction;
 
     private final Set<Book> purchasedBooks;
 

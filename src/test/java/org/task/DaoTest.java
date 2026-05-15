@@ -2,9 +2,13 @@ package org.task;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.task.DAO.BookDao;
-import org.task.DAO.ReviewDao;
-import org.task.DAO.UserDao;
+import org.task.dao.BookDao;
+import org.task.dao.ReviewDao;
+import org.task.dao.UserDao;
+import org.task.model.Book;
+import org.task.model.Review;
+import org.task.model.User;
+import org.task.util.JdbcUtil;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -23,7 +27,7 @@ class DaoTest {
     @BeforeAll
     static void setUpDatabase() {
         DatabaseTestSupport.runInitScript();
-        JdbcUtil jdbcUtil = DatabaseTestSupport.jdbcUtil();
+        JdbcUtil jdbcUtil = DatabaseTestSupport.JDBC_UTIL;
 
         bookDao = new BookDao(jdbcUtil);
         reviewDao = new ReviewDao(jdbcUtil);
@@ -110,12 +114,10 @@ class DaoTest {
         );
 
         assertThatThrownBy(() -> mapBook.invoke(null, resultSet))
-                .satisfies(throwable -> {
-                    assertThat(throwable.getCause())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("Failed to map book")
-                            .hasCauseInstanceOf(SQLException.class);
-                });
+                .satisfies(throwable -> assertThat(throwable.getCause())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("Failed to map book")
+                        .hasCauseInstanceOf(SQLException.class));
     }
 
     @Test

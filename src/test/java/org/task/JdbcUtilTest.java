@@ -2,7 +2,10 @@ package org.task;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.task.datasource.DataSourceImpl;
+import org.task.util.JdbcUtil;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -16,7 +19,7 @@ class JdbcUtilTest {
     @BeforeAll
     static void setUpDatabase() {
         DatabaseTestSupport.runInitScript();
-        jdbcUtil = DatabaseTestSupport.jdbcUtil();
+        jdbcUtil = DatabaseTestSupport.JDBC_UTIL;
     }
 
     @Test
@@ -25,9 +28,9 @@ class JdbcUtilTest {
     }
 
     @Test
-    void postgresqlUrlConstructorTest() {
-        assertThatCode(() -> new JdbcUtil("jdbc:postgresql://localhost:5432/db", "user", "pass"))
-                .doesNotThrowAnyException();
+    void argsConstructorTest() throws SQLException {
+        DataSourceImpl dataSource = new DataSourceImpl();
+        assertThatCode(() -> new JdbcUtil(dataSource)).doesNotThrowAnyException();
     }
 
     @Test
@@ -64,7 +67,7 @@ class JdbcUtilTest {
 
         Double price = jdbcUtil.findOne(
                 "SELECT price FROM books WHERE id = ?",
-                resultSet -> getDouble(resultSet, "price"),
+                resultSet -> getDouble(resultSet),
                 102
         );
 
@@ -133,7 +136,7 @@ class JdbcUtilTest {
                 .hasMessageContaining("Failed to execute the statement");
     }
 
-    private static String getString(java.sql.ResultSet resultSet, String column) {
+    private static String getString(ResultSet resultSet, String column) {
         try {
             return resultSet.getString(column);
         } catch (SQLException e) {
@@ -141,9 +144,9 @@ class JdbcUtilTest {
         }
     }
 
-    private static double getDouble(java.sql.ResultSet resultSet, String column) {
+    private static double getDouble(ResultSet resultSet) {
         try {
-            return resultSet.getDouble(column);
+            return resultSet.getDouble("price");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
