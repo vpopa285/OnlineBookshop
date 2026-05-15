@@ -1,4 +1,4 @@
-package org.task;
+package org.task.model;
 
 import lombok.Getter;
 

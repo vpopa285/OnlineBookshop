@@ -2,9 +2,13 @@ package org.task;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.task.DAO.BookDao;
-import org.task.DAO.ReviewDao;
-import org.task.DAO.UserDao;
+import org.task.dao.BookDao;
+import org.task.dao.ReviewDao;
+import org.task.dao.UserDao;
+import org.task.model.Book;
+import org.task.model.Review;
+import org.task.model.User;
+import org.task.util.JdbcUtil;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;

@@ -1,4 +1,4 @@
-package org.task;
+package org.task.util;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.postgresql.ds.PGSimpleDataSource;
@@ -18,20 +18,20 @@ public final class JdbcUtil {
     private final DataSource dataSource;
 
     public JdbcUtil() {
-        this(createDataSource(Dotenv.load()));
+        dataSource = createDataSource();
     }
 
     public JdbcUtil(String url, String username, String password) {
-        this(createDataSource(url, username, password));
+        dataSource = createDataSource(url, username, password);
     }
 
     public JdbcUtil(DataSource dataSource) {
-        this.dataSource = Objects.requireNonNull(dataSource);
+        this.dataSource = dataSource;
     }
 
     public void execute(String query, Object... args) {
         try (Connection connection = createConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+            PreparedStatement statement = connection.prepareStatement(query)) {
             setArguments(statement, args);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -43,7 +43,7 @@ public final class JdbcUtil {
         Objects.requireNonNull(statementConsumer);
 
         try (Connection connection = createConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+            PreparedStatement statement = connection.prepareStatement(query)) {
             statementConsumer.accept(statement);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -55,7 +55,7 @@ public final class JdbcUtil {
         Objects.requireNonNull(mapper);
 
         try (Connection connection = createConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+            PreparedStatement statement = connection.prepareStatement(query)) {
             setArguments(statement, args);
 
             ResultSet resultSet = statement.executeQuery();
@@ -78,7 +78,7 @@ public final class JdbcUtil {
         Objects.requireNonNull(mapper);
 
         try (Connection connection = createConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+            PreparedStatement statement = connection.prepareStatement(query)) {
 
             setArguments(statement, args);
 
@@ -114,14 +114,12 @@ public final class JdbcUtil {
         return dataSource;
     }
 
-    private static DataSource createDataSource(Dotenv dotenv) {
+    private static DataSource createDataSource() {
         PGSimpleDataSource dataSource = new PGSimpleDataSource();
 
-        dataSource.setServerNames(new String[]{dotenv.get("DB_HOST")});
-        dataSource.setPortNumbers(new int[]{Integer.parseInt(dotenv.get("DB_PORT"))});
-        dataSource.setDatabaseName(dotenv.get("DB_NAME"));
-        dataSource.setUser(dotenv.get("DB_USER"));
-        dataSource.setPassword(dotenv.get("DB_PASSWORD"));
+        dataSource.setUrl(DBUtil.URL);
+        dataSource.setUser(DBUtil.URL);
+        dataSource.setPassword(DBUtil.URL);
 
         return dataSource;
     }

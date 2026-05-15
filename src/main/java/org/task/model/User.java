@@ -1,7 +1,9 @@
-package org.task;
+package org.task.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.task.Library;
+import org.task.SearchType;
 
 import java.util.HashSet;
 import java.util.Set;

@@ -1,9 +1,9 @@
-package org.task.DAO;
+package org.task.dao;
 
-import org.task.Book;
-import org.task.JdbcUtil;
-import org.task.Review;
-import org.task.User;
+import org.task.model.Book;
+import org.task.util.JdbcUtil;
+import org.task.model.Review;
+import org.task.model.User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
