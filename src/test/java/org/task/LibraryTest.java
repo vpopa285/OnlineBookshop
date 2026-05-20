@@ -3,6 +3,7 @@ package org.task;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.task.model.Book;
 
 import java.util.Optional;
 import java.util.Set;

@@ -13,7 +13,11 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit-version>5.14.3</junit-version>
+    <lombok-version>1.18.44</lombok-version>
     <mockito-version>5.23.0</mockito-version>
+    <h2-version>2.4.240</h2-version>
+    <dotenv-version>3.2.0</dotenv-version>
+    <postgresql-version>42.7.8</postgresql-version>
   </properties>
 
   <dependencies>
@@ -49,7 +53,7 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.44</version>
+      <version>${lombok-version}</version>
       <scope>provided</scope>
     </dependency>
 
@@ -67,6 +71,25 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>${postgresql-version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.github.cdimascio</groupId>
+      <artifactId>dotenv-java</artifactId>
+      <version>${dotenv-version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>${h2-version}</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -78,13 +101,21 @@
         <version>3.11.0</version>
         <configuration>
           <release>17</release>
+          <proc>full</proc>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok-version}</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-pmd-plugin</artifactId>
-        <version>3.22.0</version>
+        <version>3.28.0</version>
         <configuration>
           <failOnViolation>true</failOnViolation>
         </configuration>
@@ -152,12 +183,17 @@
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.79</minimum>
+                      <minimum>0.80</minimum>
                     </limit>
                     <limit>
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.79</minimum>
+                      <minimum>0.80</minimum>
+                    </limit>
+                    <limit>
+                      <counter>METHOD</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.80</minimum>
                     </limit>
                   </limits>
                 </rule>

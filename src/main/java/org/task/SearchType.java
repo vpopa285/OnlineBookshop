@@ -1,5 +1,7 @@
 package org.task;
 
+import org.task.model.Book;
+
 public enum SearchType {
     TITLE,
     AUTHOR,

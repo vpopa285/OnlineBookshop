@@ -1,6 +1,7 @@
 package org.task;
 
 import lombok.Getter;
+import org.task.model.Book;
 
 
 import java.util.HashSet;

@@ -1,6 +1,9 @@
 package org.task;
 
-public class Administrator extends User{
+import org.task.model.Book;
+import org.task.model.User;
+
+public class Administrator extends User {
 
     public Administrator(String username, String email, String password) {
         super(username, email, password);

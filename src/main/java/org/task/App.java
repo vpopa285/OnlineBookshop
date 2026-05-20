@@ -1,5 +1,8 @@
 package org.task;
 
+import org.task.model.Book;
+import org.task.model.User;
+
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
