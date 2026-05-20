@@ -1,9 +1,14 @@
 package org.task;
 
+import org.task.datasource.DataSourceImpl;
 import org.task.model.Book;
 import org.task.model.User;
+import org.task.util.BenchmarkUtil;
+import org.task.util.JdbcUtil;
+
 
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -20,6 +25,21 @@ public class App {
     private static final Administrator admin = new Administrator("admin", "admin@test.com", "admin");
 
     public static void main(String[] args) {
+        int threads_nr = 8;
+
+        try {
+            JdbcUtil singleConnection = new JdbcUtil(new DataSourceImpl());
+            JdbcUtil poolConnection = new JdbcUtil();
+
+            long t1 = new BenchmarkUtil(singleConnection, threads_nr).run();
+            long t2 = new BenchmarkUtil(poolConnection, threads_nr).run();
+
+            System.out.println("Single connection: " + t1 + "ms");
+            System.out.println("Pooling connection: " + t2 + "ms\n");
+        }catch (SQLException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         init();
         runMenu();
     }

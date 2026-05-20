@@ -51,13 +51,11 @@ public class ReviewDao {
                     resultSet.getBoolean("restriction")
             );
 
-            Review review = new Review(
+            return new Review(
                     resultSet.getInt("rating"),
                     resultSet.getString("comment"),
                     user
             );
-
-            return review;
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to map review", e);
         }
