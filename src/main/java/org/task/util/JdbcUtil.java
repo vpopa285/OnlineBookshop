@@ -2,10 +2,12 @@ package org.task.util;
 import org.task.datasource.DataSourceImpl;
 import org.task.datasource.HikariCPDataSource;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -27,6 +29,10 @@ public final class JdbcUtil {
 
     public JdbcUtil(DataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    public Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
     }
 
     public void execute(String query, Object... args) {
@@ -96,6 +102,66 @@ public final class JdbcUtil {
 
     public void simulateQuery() {
         execute("SELECT pg_sleep(1)");
+    }
+
+    public static void execute(Connection connection, String query, Object... args) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            setArguments(statement, args);
+            statement.executeUpdate();
+        }
+    }
+
+    public static void executeStatement(Connection connection, String query) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(query);
+        }
+    }
+
+    public static long insertReturningId(Connection connection, String query, Object... args) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            setArguments(statement, args);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    throw new SQLException("Insert did not return an id");
+                }
+
+                return resultSet.getLong(1);
+            }
+        }
+    }
+
+    public static int count(Connection connection, String query, Object... args) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            setArguments(statement, args);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getInt(1);
+            }
+        }
+    }
+
+    public static int findInt(Connection connection, String query, Object... args) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            setArguments(statement, args);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getInt(1);
+            }
+        }
+    }
+
+    public static BigDecimal findMoney(Connection connection, String query, Object... args) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            setArguments(statement, args);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getBigDecimal(1);
+            }
+        }
     }
 
     private static void setArguments(PreparedStatement statement, Object... args) throws SQLException {
