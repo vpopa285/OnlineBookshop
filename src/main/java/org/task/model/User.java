@@ -16,7 +16,7 @@ public class User {
     private final String password;
     private double amount;
     @Setter
-    private boolean restriction = false;
+    private boolean restriction;
 
     private final Set<Book> purchasedBooks;
 

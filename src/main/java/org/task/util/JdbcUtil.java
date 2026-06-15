@@ -1,12 +1,13 @@
 package org.task.util;
+import org.task.datasource.DataSourceImpl;
+import org.task.datasource.HikariCPDataSource;
 
-import io.github.cdimascio.dotenv.Dotenv;
-import org.postgresql.ds.PGSimpleDataSource;
-
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -15,23 +16,28 @@ import java.util.function.Function;
 import javax.sql.DataSource;
 
 public final class JdbcUtil {
+
     private final DataSource dataSource;
 
     public JdbcUtil() {
-        dataSource = createDataSource();
+        dataSource = HikariCPDataSource.create();
     }
 
-    public JdbcUtil(String url, String username, String password) {
-        dataSource = createDataSource(url, username, password);
+    public JdbcUtil(DataSourceImpl dataSourceImpl) {
+        dataSource = dataSourceImpl;
     }
 
     public JdbcUtil(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
+    public Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
+    }
+
     public void execute(String query, Object... args) {
-        try (Connection connection = createConnection();
-            PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
             setArguments(statement, args);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -42,8 +48,8 @@ public final class JdbcUtil {
     public void execute(String query, Consumer<PreparedStatement> statementConsumer) {
         Objects.requireNonNull(statementConsumer);
 
-        try (Connection connection = createConnection();
-            PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
             statementConsumer.accept(statement);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -54,8 +60,8 @@ public final class JdbcUtil {
     public <T> T findOne(String query, Function<ResultSet, T> mapper, Object... args) {
         Objects.requireNonNull(mapper);
 
-        try (Connection connection = createConnection();
-            PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
             setArguments(statement, args);
 
             ResultSet resultSet = statement.executeQuery();
@@ -77,8 +83,8 @@ public final class JdbcUtil {
     public <T> List<T> findMany(String query, Function<ResultSet, T> mapper, Object... args) {
         Objects.requireNonNull(mapper);
 
-        try (Connection connection = createConnection();
-            PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
 
             setArguments(statement, args);
 
@@ -94,33 +100,73 @@ public final class JdbcUtil {
         }
     }
 
-    private Connection createConnection() throws SQLException {
-        return dataSource.getConnection();
+    public void simulateQuery() {
+        execute("SELECT pg_sleep(1)");
+    }
+
+    public static void execute(Connection connection, String query, Object... args) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            setArguments(statement, args);
+            statement.executeUpdate();
+        }
+    }
+
+    public static void executeStatement(Connection connection, String query) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(query);
+        }
+    }
+
+    public static long insertReturningId(Connection connection, String query, Object... args) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            setArguments(statement, args);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    throw new SQLException("Insert did not return an id");
+                }
+
+                return resultSet.getLong(1);
+            }
+        }
+    }
+
+    public static int count(Connection connection, String query, Object... args) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            setArguments(statement, args);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getInt(1);
+            }
+        }
+    }
+
+    public static int findInt(Connection connection, String query, Object... args) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            setArguments(statement, args);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getInt(1);
+            }
+        }
+    }
+
+    public static BigDecimal findMoney(Connection connection, String query, Object... args) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            setArguments(statement, args);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getBigDecimal(1);
+            }
+        }
     }
 
     private static void setArguments(PreparedStatement statement, Object... args) throws SQLException {
         for (int i = 0; i < args.length; i++) {
             statement.setObject(i + 1, args[i]);
         }
-    }
-
-    private static DataSource createDataSource(String url, String username, String password) {
-        PGSimpleDataSource dataSource = new PGSimpleDataSource();
-
-        dataSource.setUrl(Objects.requireNonNull(url));
-        dataSource.setUser(Objects.requireNonNull(username));
-        dataSource.setPassword(Objects.requireNonNull(password));
-
-        return dataSource;
-    }
-
-    private static DataSource createDataSource() {
-        PGSimpleDataSource dataSource = new PGSimpleDataSource();
-
-        dataSource.setUrl(DBUtil.URL);
-        dataSource.setUser(DBUtil.URL);
-        dataSource.setPassword(DBUtil.URL);
-
-        return dataSource;
     }
 }

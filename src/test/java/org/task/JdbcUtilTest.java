@@ -2,6 +2,7 @@ package org.task;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.task.datasource.DataSourceImpl;
 import org.task.util.JdbcUtil;
 
 import java.sql.ResultSet;
@@ -18,7 +19,7 @@ class JdbcUtilTest {
     @BeforeAll
     static void setUpDatabase() {
         DatabaseTestSupport.runInitScript();
-        jdbcUtil = DatabaseTestSupport.jdbcUtil();
+        jdbcUtil = DatabaseTestSupport.JDBC_UTIL;
     }
 
     @Test
@@ -27,9 +28,9 @@ class JdbcUtilTest {
     }
 
     @Test
-    void postgresqlUrlConstructorTest() {
-        assertThatCode(() -> new JdbcUtil("jdbc:postgresql://localhost:5432/db", "user", "pass"))
-                .doesNotThrowAnyException();
+    void argsConstructorTest() throws SQLException {
+        DataSourceImpl dataSource = new DataSourceImpl();
+        assertThatCode(() -> new JdbcUtil(dataSource)).doesNotThrowAnyException();
     }
 
     @Test
@@ -66,7 +67,7 @@ class JdbcUtilTest {
 
         Double price = jdbcUtil.findOne(
                 "SELECT price FROM books WHERE id = ?",
-                JdbcUtilTest::getDouble,
+                resultSet -> getDouble(resultSet),
                 102
         );
 

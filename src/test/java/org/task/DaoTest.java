@@ -27,7 +27,7 @@ class DaoTest {
     @BeforeAll
     static void setUpDatabase() {
         DatabaseTestSupport.runInitScript();
-        JdbcUtil jdbcUtil = DatabaseTestSupport.jdbcUtil();
+        JdbcUtil jdbcUtil = DatabaseTestSupport.JDBC_UTIL;
 
         bookDao = new BookDao(jdbcUtil);
         reviewDao = new ReviewDao(jdbcUtil);
@@ -114,12 +114,10 @@ class DaoTest {
         );
 
         assertThatThrownBy(() -> mapBook.invoke(null, resultSet))
-                .satisfies(throwable -> {
-                    assertThat(throwable.getCause())
-                            .isInstanceOf(IllegalStateException.class)
-                            .hasMessage("Failed to map book")
-                            .hasCauseInstanceOf(SQLException.class);
-                });
+                .satisfies(throwable -> assertThat(throwable.getCause())
+                        .isInstanceOf(IllegalStateException.class)
+                        .hasMessage("Failed to map book")
+                        .hasCauseInstanceOf(SQLException.class));
     }
 
     @Test
