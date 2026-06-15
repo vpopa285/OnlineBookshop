@@ -1,5 +1,7 @@
 package org.task;
 
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
 import org.task.datasource.DataSourceImpl;
 import org.task.model.Book;
 import org.task.model.User;
@@ -13,7 +15,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
-public class App {
+@Component
+public class App implements CommandLineRunner{
 
     private static Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
 
@@ -23,7 +26,8 @@ public class App {
 
     private static final Administrator admin = new Administrator("admin", "admin@test.com", "admin");
 
-    public static void main(String[] args) {
+    @Override
+    public void run(String ... args) {
         int threads_nr = 8;
 
         try {
