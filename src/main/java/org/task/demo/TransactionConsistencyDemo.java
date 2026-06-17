@@ -1,5 +1,6 @@
 package org.task.demo;
 
+import org.task.datasource.HikariCPDataSource;
 import org.task.util.JdbcUtil;
 
 import java.math.BigDecimal;
@@ -11,7 +12,7 @@ public final class TransactionConsistencyDemo {
     private static final long BOOK_ID = 910_001L;
     private static final BigDecimal INITIAL_BALANCE = new BigDecimal("50.00");
     private static final BigDecimal BOOK_PRICE = new BigDecimal("25.00");
-    private static final JdbcUtil JDBC_UTIL = new JdbcUtil();
+    private static final JdbcUtil JDBC_UTIL = new JdbcUtil(HikariCPDataSource.create());
 
     private TransactionConsistencyDemo() {
     }

@@ -1,5 +1,6 @@
 package org.task.demo;
 
+import org.task.datasource.HikariCPDataSource;
 import org.task.util.JdbcUtil;
 
 import java.math.BigDecimal;
@@ -12,7 +13,7 @@ public final class IsolationLevelDemo {
     private static final long FIRST_USER_ID = 920_001L;
     private static final long SECOND_USER_ID = 920_002L;
     private static final BigDecimal BOOK_PRICE = new BigDecimal("15.00");
-    private static final JdbcUtil JDBC_UTIL = new JdbcUtil();
+    private static final JdbcUtil JDBC_UTIL = new JdbcUtil(HikariCPDataSource.create());
 
     private IsolationLevelDemo() {
     }

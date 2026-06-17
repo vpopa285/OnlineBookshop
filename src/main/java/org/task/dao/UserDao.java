@@ -1,5 +1,7 @@
 package org.task.dao;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 import org.task.util.JdbcUtil;
 import org.task.model.User;
 
@@ -7,9 +9,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+@Repository
 public class UserDao {
     private final JdbcUtil jdbcUtil;
 
+    @Autowired
     public UserDao(JdbcUtil jdbcUtil) {
         this.jdbcUtil = jdbcUtil;
     }

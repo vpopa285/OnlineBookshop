@@ -1,65 +1,65 @@
 package org.task;
 
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import org.task.datasource.DataSourceImpl;
 import org.task.model.Book;
 import org.task.model.User;
-import org.task.util.BenchmarkUtil;
-import org.task.util.JdbcUtil;
+import org.task.service.BookService;
+import org.task.service.ReviewService;
+import org.task.service.UserService;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
 @Component
-public class App implements CommandLineRunner{
+public class App {
 
     private static Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
 
-    private static final Library library = new Library();
-    private static final User user = new User("user", "ex@test.com", "1234", 50);
-    private static final List<User> users = new ArrayList<>();
+    private final Library library;
+    private final BookService bookService;
+    private final UserService userService;
+    private final ReviewService reviewService;
+    private User user;
+    private final List<User> users = new ArrayList<>();
+    private Administrator admin;
 
-    private static final Administrator admin = new Administrator("admin", "admin@test.com", "admin");
+    public App(Library library,
+            BookService bookService,
+            UserService userService,
+            ReviewService reviewService) {
+        this.library = library;
+        this.bookService = bookService;
+        this.userService = userService;
+        this.reviewService = reviewService;
+    }
 
-    @Override
-    public void run(String ... args) {
-        int threads_nr = 8;
-
-        try {
-            JdbcUtil singleConnection = new JdbcUtil(new DataSourceImpl());
-            JdbcUtil poolConnection = new JdbcUtil();
-
-            long t1 = new BenchmarkUtil(singleConnection, threads_nr).run();
-            long t2 = new BenchmarkUtil(poolConnection, threads_nr).run();
-
-            System.out.println("Single connection: " + t1 + "ms");
-            System.out.println("Pooling connection: " + t2 + "ms\n");
-        }catch (SQLException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
+    public void run() {
         init();
         runMenu();
     }
 
-    static void init() {
-        admin.addBook(library, new Book("Java", "James", "Programming", "Full Java content...", 20));
-        admin.addBook(library, new Book("Python", "Guido", "Programming", "Python content...", 15));
+    void init() {
+        library.getLibrary().clear();
+        users.clear();
 
-        users.add(new User("mark", "mail@test.com", "1234"));
-        users.add(new User("ann", "mail@test.com", "1234"));
+        user = new User(0, "user", "ex@test.com", "1234", 15, false);
+        admin = new Administrator("admin", "admin@test.com", "admin");
+
+        admin.addBook(library, new Book(0, "Java", "James", "Programming", "Full Java content...", 20));
+        admin.addBook(library, new Book(1, "Python", "Guido", "Programming", "Python content...", 15));
+
+        users.add(new User(1, "mark", "mark@test.com", "1234", 0, false));
+        users.add(new User(2, "ann", "ann@test.com", "1234", 0, false));
     }
 
-    static void initScanner() {
+    void initScanner() {
         scanner = new Scanner(System.in, StandardCharsets.UTF_8);
     }
 
-    static void runMenu() {
+    void runMenu() {
         boolean running = true;
         while (running) {
             System.out.println("""
@@ -105,7 +105,7 @@ public class App implements CommandLineRunner{
         }
     }
 
-    private static void search() {
+    private void search() {
         System.out.println("Search by: TITLE / AUTHOR / GENRE");
 
         SearchType type;
@@ -142,7 +142,7 @@ public class App implements CommandLineRunner{
                 );
     }
 
-    private static void buy() {
+    private void buy() {
         System.out.println("Book id:");
         long id = readLong();
 
@@ -153,7 +153,7 @@ public class App implements CommandLineRunner{
                 );
     }
 
-    private static void showPurchased() {
+    private void showPurchased() {
         if (user.getPurchasedBooks().isEmpty()) {
             System.out.println("No purchased books");
             return;
@@ -162,7 +162,7 @@ public class App implements CommandLineRunner{
         user.getPurchasedBooks().forEach(b -> System.out.println(b.getTitle()));
     }
 
-    private static void readBook() {
+    private void readBook() {
         System.out.println("Book id:");
         long id = readLong();
 
@@ -175,7 +175,7 @@ public class App implements CommandLineRunner{
                 );
     }
 
-    private static void review() {
+    private void review() {
         System.out.println("Book id:");
         long id = readLong();
 
@@ -203,7 +203,7 @@ public class App implements CommandLineRunner{
         user.review(book, rate, comment);
     }
 
-    private static void addMoney() {
+    private void addMoney() {
         System.out.println("Amount:");
         double amount = readDouble();
 
@@ -215,7 +215,7 @@ public class App implements CommandLineRunner{
         user.addFunds(amount);
     }
 
-    private static void adminMenu() {
+    private void adminMenu() {
         System.out.println("""
                 1. Add book
                 2. Remove book
@@ -295,6 +295,16 @@ public class App implements CommandLineRunner{
             System.out.println("Invalid number");
             return -1;
         }
+    }
+
+    BookService getBookService() {
+        return bookService;
+    }
+    UserService getUserService() {
+        return userService;
+    }
+    ReviewService getReviewService() {
+        return reviewService;
     }
 
 }

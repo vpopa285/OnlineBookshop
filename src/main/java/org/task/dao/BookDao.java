@@ -1,5 +1,7 @@
 package org.task.dao;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 import org.task.model.Book;
 import org.task.util.JdbcUtil;
 import org.task.model.Review;
@@ -10,9 +12,11 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 
+@Repository
 public class BookDao {
     private final JdbcUtil jdbcUtil;
 
+    @Autowired
     public BookDao(JdbcUtil jdbcUtil) {
         this.jdbcUtil = jdbcUtil;
     }

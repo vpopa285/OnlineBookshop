@@ -17,6 +17,10 @@ public class DataSourceImpl implements DataSource {
         connection = DriverManager.getConnection(DBUtil.URL, DBUtil.USER, DBUtil.PASSWORD);
     }
 
+    public DataSourceImpl(String url, String username, String password) throws SQLException {
+        connection = DriverManager.getConnection(url, username, password);
+    }
+
     @Override
     public synchronized Connection getConnection() {
         return connection;

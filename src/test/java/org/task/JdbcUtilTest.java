@@ -2,7 +2,7 @@ package org.task;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.task.datasource.DataSourceImpl;
+import org.h2.jdbcx.JdbcDataSource;
 import org.task.util.JdbcUtil;
 
 import java.sql.ResultSet;
@@ -23,13 +23,12 @@ class JdbcUtilTest {
     }
 
     @Test
-    void defaultConstructorTest() {
-        assertThatCode(JdbcUtil::new).doesNotThrowAnyException();
-    }
+    void dataSourceConstructorTest() {
+        JdbcDataSource dataSource = new JdbcDataSource();
+        dataSource.setUrl(DatabaseTestSupport.URL);
+        dataSource.setUser(DatabaseTestSupport.USERNAME);
+        dataSource.setPassword(DatabaseTestSupport.PASSWORD);
 
-    @Test
-    void argsConstructorTest() throws SQLException {
-        DataSourceImpl dataSource = new DataSourceImpl();
         assertThatCode(() -> new JdbcUtil(dataSource)).doesNotThrowAnyException();
     }
 

@@ -1,6 +1,8 @@
 package org.task.util;
-import org.task.datasource.DataSourceImpl;
-import org.task.datasource.HikariCPDataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -15,18 +17,13 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.sql.DataSource;
 
+@Component
+@Primary
 public final class JdbcUtil {
 
     private final DataSource dataSource;
 
-    public JdbcUtil() {
-        dataSource = HikariCPDataSource.create();
-    }
-
-    public JdbcUtil(DataSourceImpl dataSourceImpl) {
-        dataSource = dataSourceImpl;
-    }
-
+    @Autowired
     public JdbcUtil(DataSource dataSource) {
         this.dataSource = dataSource;
     }
