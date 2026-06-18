@@ -1,6 +1,6 @@
-package org.task.util;
+package org.task.jdbc;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -19,14 +19,10 @@ import javax.sql.DataSource;
 
 @Component
 @Primary
-public final class JdbcUtil {
+@RequiredArgsConstructor
+public final class JdbcExecutor {
 
     private final DataSource dataSource;
-
-    @Autowired
-    public JdbcUtil(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
 
     public Connection getConnection() throws SQLException {
         return dataSource.getConnection();

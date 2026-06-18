@@ -1,5 +1,7 @@
 package org.task;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.task.model.Book;
 import org.task.model.User;
@@ -14,27 +16,21 @@ import java.util.Scanner;
 import java.util.Set;
 
 @Component
+@RequiredArgsConstructor
 public class App {
 
     private static Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
 
     private final Library library;
+    @Getter
     private final BookService bookService;
+    @Getter
     private final UserService userService;
+    @Getter
     private final ReviewService reviewService;
     private User user;
     private final List<User> users = new ArrayList<>();
     private Administrator admin;
-
-    public App(Library library,
-            BookService bookService,
-            UserService userService,
-            ReviewService reviewService) {
-        this.library = library;
-        this.bookService = bookService;
-        this.userService = userService;
-        this.reviewService = reviewService;
-    }
 
     public void run() {
         init();
@@ -295,16 +291,6 @@ public class App {
             System.out.println("Invalid number");
             return -1;
         }
-    }
-
-    BookService getBookService() {
-        return bookService;
-    }
-    UserService getUserService() {
-        return userService;
-    }
-    ReviewService getReviewService() {
-        return reviewService;
     }
 
 }

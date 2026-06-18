@@ -1,7 +1,7 @@
 package org.task.demo;
 
 import org.task.datasource.HikariCPDataSource;
-import org.task.util.JdbcUtil;
+import org.task.jdbc.JdbcExecutor;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -13,7 +13,7 @@ public final class IsolationLevelDemo {
     private static final long FIRST_USER_ID = 920_001L;
     private static final long SECOND_USER_ID = 920_002L;
     private static final BigDecimal BOOK_PRICE = new BigDecimal("15.00");
-    private static final JdbcUtil JDBC_UTIL = new JdbcUtil(HikariCPDataSource.create());
+    private static final JdbcExecutor JDBC_EXECUTOR = new JdbcExecutor(HikariCPDataSource.create());
 
     private IsolationLevelDemo() {
     }
@@ -53,11 +53,11 @@ public final class IsolationLevelDemo {
             int isolationLevel,
             CountDownLatch bothTransactionsHaveRead,
             CountDownLatch mayUpdate) {
-        try (Connection connection = JDBC_UTIL.getConnection()) {
+        try (Connection connection = JDBC_EXECUTOR.getConnection()) {
             connection.setTransactionIsolation(isolationLevel);
             connection.setAutoCommit(false);
 
-            int availableCopies = JdbcUtil.findInt(connection,
+            int availableCopies = JdbcExecutor.findInt(connection,
                     "SELECT available_copies FROM book_inventory WHERE book_id = ?", BOOK_ID);
             System.out.printf("  user %d read available_copies=%d%n", userId, availableCopies);
 
@@ -65,11 +65,11 @@ public final class IsolationLevelDemo {
             mayUpdate.await();
 
             if (availableCopies > 0) {
-                JdbcUtil.execute(connection, """
+                JdbcExecutor.execute(connection, """
                         UPDATE book_inventory
                         SET available_copies = 0
                         WHERE book_id = ?""", BOOK_ID);
-                JdbcUtil.insertReturningId(connection, """
+                JdbcExecutor.insertReturningId(connection, """
                         INSERT INTO orders (user_id, total_price, status)
                         VALUES (?, ?, 'COMPLETED')
                         RETURNING id""", userId, BOOK_PRICE);
@@ -87,8 +87,8 @@ public final class IsolationLevelDemo {
     }
 
     private static void resetDemoData() throws SQLException {
-        try (Connection connection = JDBC_UTIL.getConnection()) {
-            JdbcUtil.executeStatement(connection, """
+        try (Connection connection = JDBC_EXECUTOR.getConnection()) {
+            JdbcExecutor.executeStatement(connection, """
                     CREATE TABLE IF NOT EXISTS book_inventory (
                         book_id BIGINT PRIMARY KEY REFERENCES books(id),
                         available_copies INT NOT NULL CHECK (available_copies >= 0)
@@ -96,31 +96,31 @@ public final class IsolationLevelDemo {
             cleanup(connection);
             insertUser(connection, FIRST_USER_ID, "isolation-buyer-1@example.com");
             insertUser(connection, SECOND_USER_ID, "isolation-buyer-2@example.com");
-            JdbcUtil.execute(connection, "INSERT INTO books (id, title, author, description, price) VALUES (?, 'Serializable Demo Book', 'OnlineBookshop', 'Demo data', ?)",
+            JdbcExecutor.execute(connection, "INSERT INTO books (id, title, author, description, price) VALUES (?, 'Serializable Demo Book', 'OnlineBookshop', 'Demo data', ?)",
                     BOOK_ID, BOOK_PRICE);
-            JdbcUtil.execute(connection, "INSERT INTO book_inventory (book_id, available_copies) VALUES (?, 1)", BOOK_ID);
+            JdbcExecutor.execute(connection, "INSERT INTO book_inventory (book_id, available_copies) VALUES (?, 1)", BOOK_ID);
         }
     }
 
     private static void insertUser(Connection connection, long userId, String email) throws SQLException {
-        JdbcUtil.execute(connection, "INSERT INTO users (id, username, email, password, amount) VALUES (?, ?, ?, 'secret', 100.00)",
+        JdbcExecutor.execute(connection, "INSERT INTO users (id, username, email, password, amount) VALUES (?, ?, ?, 'secret', 100.00)",
                 userId, "isolation_user_" + userId, email);
     }
 
     private static void cleanup(Connection connection) throws SQLException {
-        JdbcUtil.execute(connection,
+        JdbcExecutor.execute(connection,
                 "DELETE FROM order_items WHERE order_id IN ( SELECT id FROM orders WHERE user_id IN (?, ?) )", FIRST_USER_ID, SECOND_USER_ID);
-        JdbcUtil.execute(connection, "DELETE FROM orders WHERE user_id IN (?, ?)", FIRST_USER_ID, SECOND_USER_ID);
-        JdbcUtil.execute(connection, "DELETE FROM book_inventory WHERE book_id = ?", BOOK_ID);
-        JdbcUtil.execute(connection, "DELETE FROM users WHERE id IN (?, ?)", FIRST_USER_ID, SECOND_USER_ID);
-        JdbcUtil.execute(connection, "DELETE FROM books WHERE id = ?", BOOK_ID);
+        JdbcExecutor.execute(connection, "DELETE FROM orders WHERE user_id IN (?, ?)", FIRST_USER_ID, SECOND_USER_ID);
+        JdbcExecutor.execute(connection, "DELETE FROM book_inventory WHERE book_id = ?", BOOK_ID);
+        JdbcExecutor.execute(connection, "DELETE FROM users WHERE id IN (?, ?)", FIRST_USER_ID, SECOND_USER_ID);
+        JdbcExecutor.execute(connection, "DELETE FROM books WHERE id = ?", BOOK_ID);
     }
 
     private static void printState(String label) throws SQLException {
-        try (Connection connection = JDBC_UTIL.getConnection()) {
-            int availableCopies = JdbcUtil.findInt(connection,
+        try (Connection connection = JDBC_EXECUTOR.getConnection()) {
+            int availableCopies = JdbcExecutor.findInt(connection,
                     "SELECT available_copies FROM book_inventory WHERE book_id = ?", BOOK_ID);
-            int completedOrders = JdbcUtil.count(connection,
+            int completedOrders = JdbcExecutor.count(connection,
                     "SELECT COUNT(*) FROM orders WHERE user_id IN (?, ?) AND status = 'COMPLETED'",
                     FIRST_USER_ID, SECOND_USER_ID);
 

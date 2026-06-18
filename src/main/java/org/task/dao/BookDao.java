@@ -1,9 +1,9 @@
 package org.task.dao;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.task.model.Book;
-import org.task.util.JdbcUtil;
+import org.task.jdbc.JdbcExecutor;
 import org.task.model.Review;
 import org.task.model.User;
 
@@ -13,35 +13,31 @@ import java.util.List;
 import java.util.Objects;
 
 @Repository
+@RequiredArgsConstructor
 public class BookDao {
-    private final JdbcUtil jdbcUtil;
-
-    @Autowired
-    public BookDao(JdbcUtil jdbcUtil) {
-        this.jdbcUtil = jdbcUtil;
-    }
+    private final JdbcExecutor jdbcExecutor;
 
     public void create(Book book) {
-        jdbcUtil.execute("INSERT INTO books (id, title, author, genre, content, price) VALUES (?, ?, ?, ?, ?, ?)",
+        jdbcExecutor.execute("INSERT INTO books (id, title, author, genre, content, price) VALUES (?, ?, ?, ?, ?, ?)",
                 book.getId(), book.getTitle(), book.getAuthor(), book.getGenre(), book.getContent(), book.getPrice()
         );
     }
 
     public Book findById(long id) {
-        return jdbcUtil.findOne("SELECT id, title, author, genre, content, price FROM books WHERE id = ?",
+        return jdbcExecutor.findOne("SELECT id, title, author, genre, content, price FROM books WHERE id = ?",
                 BookDao::mapBook,
                 id
         );
     }
 
     public List<Book> findAll() {
-        return jdbcUtil.findMany("SELECT id, title, author, genre, content, price FROM books ORDER BY id",
+        return jdbcExecutor.findMany("SELECT id, title, author, genre, content, price FROM books ORDER BY id",
                 BookDao::mapBook
         );
     }
 
     public Book findByIdWithReviews(long id) {
-        List<BookReviewRow> rows = jdbcUtil.findMany("""
+        List<BookReviewRow> rows = jdbcExecutor.findMany("""
                        SELECT b.id AS book_id, b.title, b.author, b.genre, b.content, b.price, r.id AS review_id,
                        r.rating, r.comment, u.id AS user_id, u.username, u.email, u.password, u.amount, u.restriction
                        FROM books b
@@ -67,7 +63,7 @@ public class BookDao {
     }
 
     public void update(Book book) {
-        jdbcUtil.execute("""
+        jdbcExecutor.execute("""
                 UPDATE books SET title = ?, author = ?, genre = ?, content = ?, price = ?
                 WHERE id = ?""",
                 book.getTitle(), book.getAuthor(), book.getGenre(), book.getContent(), book.getPrice(), book.getId()
@@ -75,7 +71,7 @@ public class BookDao {
     }
 
     public void deleteById(long id) {
-        jdbcUtil.execute("DELETE FROM books WHERE id = ?", id);
+        jdbcExecutor.execute("DELETE FROM books WHERE id = ?", id);
     }
 
     private static Book mapBook(ResultSet resultSet) {

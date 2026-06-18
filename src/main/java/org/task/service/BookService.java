@@ -1,6 +1,6 @@
 package org.task.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.task.dao.BookDao;
 import org.task.model.Book;
@@ -8,13 +8,9 @@ import org.task.model.Book;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class BookService {
     private final BookDao bookDao;
-
-    @Autowired
-    public BookService(BookDao bookDao) {
-        this.bookDao = bookDao;
-    }
 
     public void create(Book book) {
         bookDao.create(book);

@@ -10,6 +10,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.stream.Stream;
 
@@ -24,7 +25,7 @@ class AppTest {
 
     private ByteArrayOutputStream output;
     private PrintStream originalOut;
-    private java.io.InputStream originalIn;
+    private InputStream originalIn;
 
     @BeforeEach
     void setUp() {

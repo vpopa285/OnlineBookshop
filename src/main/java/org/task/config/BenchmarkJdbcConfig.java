@@ -1,10 +1,9 @@
 package org.task.config;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.task.util.JdbcUtil;
+import org.task.jdbc.JdbcExecutor;
 
 import javax.sql.DataSource;
 
@@ -13,14 +12,14 @@ import javax.sql.DataSource;
 public class BenchmarkJdbcConfig {
 
     @Bean
-    public JdbcUtil singleConnectionJdbcUtil(
-            @Qualifier("singleConnectionDataSource") DataSource dataSource) {
-        return new JdbcUtil(dataSource);
+    public JdbcExecutor singleConnectionJdbcExecutor(
+            DataSource singleConnectionDataSource) {
+        return new JdbcExecutor(singleConnectionDataSource);
     }
 
     @Bean
-    public JdbcUtil pooledBenchmarkJdbcUtil(
-            @Qualifier("pooledBenchmarkDataSource") DataSource dataSource) {
-        return new JdbcUtil(dataSource);
+    public JdbcExecutor pooledBenchmarkJdbcExecutor(
+            DataSource pooledBenchmarkDataSource) {
+        return new JdbcExecutor(pooledBenchmarkDataSource);
     }
 }

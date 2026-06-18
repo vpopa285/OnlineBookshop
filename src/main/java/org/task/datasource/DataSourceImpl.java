@@ -1,7 +1,5 @@
 package org.task.datasource;
 
-import org.task.util.DBUtil;
-
 import javax.sql.DataSource;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -12,10 +10,6 @@ import java.util.logging.Logger;
 
 public class DataSourceImpl implements DataSource {
     private final Connection connection;
-
-    public DataSourceImpl() throws SQLException {
-        connection = DriverManager.getConnection(DBUtil.URL, DBUtil.USER, DBUtil.PASSWORD);
-    }
 
     public DataSourceImpl(String url, String username, String password) throws SQLException {
         connection = DriverManager.getConnection(url, username, password);
