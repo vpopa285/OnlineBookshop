@@ -1,6 +1,7 @@
 package org.task.demo;
 
-import org.task.util.JdbcUtil;
+import org.task.datasource.HikariCPDataSource;
+import org.task.jdbc.JdbcExecutor;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -11,7 +12,7 @@ public final class TransactionConsistencyDemo {
     private static final long BOOK_ID = 910_001L;
     private static final BigDecimal INITIAL_BALANCE = new BigDecimal("50.00");
     private static final BigDecimal BOOK_PRICE = new BigDecimal("25.00");
-    private static final JdbcUtil JDBC_UTIL = new JdbcUtil();
+    private static final JdbcExecutor JDBC_EXECUTOR = new JdbcExecutor(HikariCPDataSource.create());
 
     private TransactionConsistencyDemo() {
     }
@@ -28,7 +29,7 @@ public final class TransactionConsistencyDemo {
     }
 
     private static void runBrokenPurchaseWithoutTransaction() {
-        try (Connection connection = JDBC_UTIL.getConnection()) {
+        try (Connection connection = JDBC_EXECUTOR.getConnection()) {
             debitWallet(connection);
             long orderId = createOrder(connection);
             createBrokenOrderItem(connection, orderId);
@@ -39,7 +40,7 @@ public final class TransactionConsistencyDemo {
     }
 
     private static void runBrokenPurchaseWithTransaction() {
-        try (Connection connection = JDBC_UTIL.getConnection()) {
+        try (Connection connection = JDBC_EXECUTOR.getConnection()) {
             connection.setAutoCommit(false);
 
             try {
@@ -60,51 +61,51 @@ public final class TransactionConsistencyDemo {
     }
 
     private static void debitWallet(Connection connection) throws SQLException {
-        JdbcUtil.execute(connection, "UPDATE user_wallet SET balance = balance - ? WHERE user_id = ? AND balance >= ?",
+        JdbcExecutor.execute(connection, "UPDATE user_wallet SET balance = balance - ? WHERE user_id = ? AND balance >= ?",
                 BOOK_PRICE, USER_ID, BOOK_PRICE);
     }
 
     private static long createOrder(Connection connection) throws SQLException {
-        return JdbcUtil.insertReturningId(connection, "INSERT INTO orders (user_id, total_price, status) VALUES (?, ?, 'PENDING') RETURNING id",
+        return JdbcExecutor.insertReturningId(connection, "INSERT INTO orders (user_id, total_price, status) VALUES (?, ?, 'PENDING') RETURNING id",
                 USER_ID, BOOK_PRICE);
     }
 
     private static void createBrokenOrderItem(Connection connection, long orderId) throws SQLException {
-        JdbcUtil.execute(connection, "INSERT INTO order_items (order_id, book_id, price) VALUES (?, ?, ?)",
+        JdbcExecutor.execute(connection, "INSERT INTO order_items (order_id, book_id, price) VALUES (?, ?, ?)",
                 orderId, -BOOK_ID, BOOK_PRICE);
     }
 
     private static void resetDemoData() throws SQLException {
-        try (Connection connection = JDBC_UTIL.getConnection()) {
+        try (Connection connection = JDBC_EXECUTOR.getConnection()) {
             cleanup(connection);
-            JdbcUtil.execute(connection,
+            JdbcExecutor.execute(connection,
                     " INSERT INTO users (id, username, email, password, amount) VALUES (?, 'tx_demo_user', 'tx-demo@example.com', 'secret', ?)",
                     USER_ID, INITIAL_BALANCE);
-            JdbcUtil.execute(connection, "INSERT INTO user_wallet (user_id, balance, currency) VALUES (?, ?, 'USD')",
+            JdbcExecutor.execute(connection, "INSERT INTO user_wallet (user_id, balance, currency) VALUES (?, ?, 'USD')",
                     USER_ID, INITIAL_BALANCE);
-            JdbcUtil.execute(connection,
+            JdbcExecutor.execute(connection,
                     "INSERT INTO books (id, title, author, description, price) VALUES (?, 'Transaction Demo Book', 'OnlineBookshop', 'Demo data', ?)",
                     BOOK_ID, BOOK_PRICE);
         }
     }
 
     private static void cleanup(Connection connection) throws SQLException {
-        JdbcUtil.execute(connection, """
+        JdbcExecutor.execute(connection, """
                 DELETE FROM order_items
                 WHERE order_id IN (SELECT id FROM orders WHERE user_id = ?)""", USER_ID);
-        JdbcUtil.execute(connection, "DELETE FROM orders WHERE user_id = ?", USER_ID);
-        JdbcUtil.execute(connection, "DELETE FROM user_wallet WHERE user_id = ?", USER_ID);
-        JdbcUtil.execute(connection, "DELETE FROM users WHERE id = ?", USER_ID);
-        JdbcUtil.execute(connection, "DELETE FROM books WHERE id = ?", BOOK_ID);
+        JdbcExecutor.execute(connection, "DELETE FROM orders WHERE user_id = ?", USER_ID);
+        JdbcExecutor.execute(connection, "DELETE FROM user_wallet WHERE user_id = ?", USER_ID);
+        JdbcExecutor.execute(connection, "DELETE FROM users WHERE id = ?", USER_ID);
+        JdbcExecutor.execute(connection, "DELETE FROM books WHERE id = ?", BOOK_ID);
     }
 
     private static void printState(String label) throws SQLException {
-        try (Connection connection = JDBC_UTIL.getConnection()) {
-            BigDecimal balance = JdbcUtil.findMoney(connection,
+        try (Connection connection = JDBC_EXECUTOR.getConnection()) {
+            BigDecimal balance = JdbcExecutor.findMoney(connection,
                     "SELECT balance FROM user_wallet WHERE user_id = ?", USER_ID);
-            int orders = JdbcUtil.count(connection,
+            int orders = JdbcExecutor.count(connection,
                     "SELECT COUNT(*) FROM orders WHERE user_id = ?", USER_ID);
-            int items = JdbcUtil.count(connection, """
+            int items = JdbcExecutor.count(connection, """
                     SELECT COUNT(*)
                     FROM order_items oi
                     JOIN orders o ON o.id = oi.order_id

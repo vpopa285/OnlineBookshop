@@ -8,14 +8,18 @@ import javax.sql.DataSource;
 
 public class HikariCPDataSource {
     public static DataSource create() {
+        return create(DBUtil.URL, DBUtil.USER, DBUtil.PASSWORD);
+    }
 
+    public static DataSource create(String url, String username, String password) {
         HikariConfig config = new HikariConfig();
 
-        config.setJdbcUrl(DBUtil.URL);
-        config.setUsername(DBUtil.USER);
-        config.setPassword(DBUtil.PASSWORD);
+        config.setJdbcUrl(url);
+        config.setUsername(username);
+        config.setPassword(password);
 
         config.setMaximumPoolSize(16);
+        config.setInitializationFailTimeout(-1);
 
         return new HikariDataSource(config);
     }

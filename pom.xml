@@ -12,11 +12,10 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit-version>5.14.3</junit-version>
+    <junit-version>6.1.0</junit-version>
     <lombok-version>1.18.44</lombok-version>
     <mockito-version>5.23.0</mockito-version>
     <h2-version>2.4.240</h2-version>
-    <dotenv-version>3.2.0</dotenv-version>
     <postgresql-version>42.7.8</postgresql-version>
     <hikari-version>7.0.2</hikari-version>
     <springboot-version>4.1.0</springboot-version>
@@ -77,12 +76,6 @@
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>${postgresql-version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.github.cdimascio</groupId>
-      <artifactId>dotenv-java</artifactId>
-      <version>${dotenv-version}</version>
     </dependency>
 
     <dependency>
@@ -147,6 +140,19 @@
             </path>
           </annotationProcessorPaths>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${springboot-version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>

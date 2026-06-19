@@ -2,7 +2,7 @@ package org.task;
 
 import org.junit.jupiter.api.Test;
 import org.task.util.BenchmarkUtil;
-import org.task.util.JdbcUtil;
+import org.task.jdbc.JdbcExecutor;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -13,23 +13,23 @@ class BenchmarkUtilTest {
 
     @Test
     void allThreadsExecute() throws InterruptedException {
-        JdbcUtil jdbcUtil = mock(JdbcUtil.class);
+        JdbcExecutor jdbcExecutor = mock(JdbcExecutor.class);
         int count = 8;
 
-        new BenchmarkUtil(jdbcUtil, count).run();
+        new BenchmarkUtil(jdbcExecutor, count).run();
 
-        verify(jdbcUtil, times(count)).simulateQuery();
+        verify(jdbcExecutor, times(count)).simulateQuery();
     }
 
     @Test
     void returnsElapsedTime() throws InterruptedException {
-        JdbcUtil jdbcUtil = mock(JdbcUtil.class);
+        JdbcExecutor jdbcExecutor = mock(JdbcExecutor.class);
         doAnswer(invocation -> {
             Thread.sleep(100);
             return null;
-        }).when(jdbcUtil).simulateQuery();
+        }).when(jdbcExecutor).simulateQuery();
 
-        long elapsed = new BenchmarkUtil(jdbcUtil, 4).run();
+        long elapsed = new BenchmarkUtil(jdbcExecutor, 4).run();
 
         assertTrue(elapsed >= 100, "Should take at least 100ms");
         assertTrue(elapsed < 400, "Should run in parallel, not sequentially");
@@ -37,25 +37,25 @@ class BenchmarkUtilTest {
 
     @Test
     void latchCountsDownEvenOnFailure() throws InterruptedException {
-        JdbcUtil jdbcUtil = mock(JdbcUtil.class);
-        doThrow(new RuntimeException("DB error")).when(jdbcUtil).simulateQuery();
+        JdbcExecutor jdbcExecutor = mock(JdbcExecutor.class);
+        doThrow(new RuntimeException("DB error")).when(jdbcExecutor).simulateQuery();
 
-        long elapsed = new BenchmarkUtil(jdbcUtil, 4).run();
+        long elapsed = new BenchmarkUtil(jdbcExecutor, 4).run();
 
         assertTrue(elapsed >= 0);
     }
 
     @Test
     void countIsRespected() throws InterruptedException {
-        JdbcUtil jdbcUtil = mock(JdbcUtil.class);
+        JdbcExecutor jdbcExecutor = mock(JdbcExecutor.class);
         AtomicInteger callCount = new AtomicInteger(0);
 
         doAnswer(invocation -> {
             callCount.incrementAndGet();
             return null;
-        }).when(jdbcUtil).simulateQuery();
+        }).when(jdbcExecutor).simulateQuery();
 
-        new BenchmarkUtil(jdbcUtil, 5).run();
+        new BenchmarkUtil(jdbcExecutor, 5).run();
 
         assertEquals(5, callCount.get());
     }

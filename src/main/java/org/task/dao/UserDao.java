@@ -1,27 +1,27 @@
 package org.task.dao;
 
-import org.task.util.JdbcUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+import org.task.jdbc.JdbcExecutor;
 import org.task.model.User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+@Repository
+@RequiredArgsConstructor
 public class UserDao {
-    private final JdbcUtil jdbcUtil;
-
-    public UserDao(JdbcUtil jdbcUtil) {
-        this.jdbcUtil = jdbcUtil;
-    }
+    private final JdbcExecutor jdbcExecutor;
 
     public void create(User user) {
-        jdbcUtil.execute("INSERT INTO users (id, username, email, password, amount, restriction) VALUES (?, ?, ?, ?, ?, ?)",
+        jdbcExecutor.execute("INSERT INTO users (id, username, email, password, amount, restriction) VALUES (?, ?, ?, ?, ?, ?)",
                 user.getId(), user.getUsername(), user.getEmail(), user.getPassword(), user.getAmount(), user.isRestriction()
         );
     }
 
     public User findById(long id) {
-        return jdbcUtil.findOne("""
+        return jdbcExecutor.findOne("""
                 SELECT id, username, email, password, amount, restriction FROM users
                 WHERE id = ?""",
                 UserDao::mapUser,
@@ -30,7 +30,7 @@ public class UserDao {
     }
 
     public List<User> findAll() {
-        return jdbcUtil.findMany("""
+        return jdbcExecutor.findMany("""
                 SELECT id, username, email, password, amount, restriction FROM users
                 ORDER BY id""",
                 UserDao::mapUser
@@ -38,7 +38,7 @@ public class UserDao {
     }
 
     public void update(User user) {
-        jdbcUtil.execute("""
+        jdbcExecutor.execute("""
                 UPDATE users SET username = ?, email = ?, password = ?, amount = ?, restriction = ?
                 WHERE id = ?""",
                 user.getUsername(), user.getEmail(), user.getPassword(), user.getAmount(), user.isRestriction(), user.getId()
@@ -46,7 +46,7 @@ public class UserDao {
     }
 
     public void deleteById(long id) {
-        jdbcUtil.execute("DELETE FROM users WHERE id = ?", id);
+        jdbcExecutor.execute("DELETE FROM users WHERE id = ?", id);
     }
 
     private static User mapUser(ResultSet resultSet) {

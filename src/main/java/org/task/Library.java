@@ -1,16 +1,17 @@
 package org.task;
 
 import lombok.Getter;
+import org.springframework.stereotype.Component;
 import org.task.model.Book;
-
 
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Getter
+@Component
 public class Library {
+    @Getter
     private final Set<Book> library = new HashSet<>();
 
     public Set<Book> search(SearchType type, String value) {

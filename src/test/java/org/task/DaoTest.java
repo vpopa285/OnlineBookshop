@@ -8,7 +8,7 @@ import org.task.dao.UserDao;
 import org.task.model.Book;
 import org.task.model.Review;
 import org.task.model.User;
-import org.task.util.JdbcUtil;
+import org.task.jdbc.JdbcExecutor;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -27,11 +27,11 @@ class DaoTest {
     @BeforeAll
     static void setUpDatabase() {
         DatabaseTestSupport.runInitScript();
-        JdbcUtil jdbcUtil = DatabaseTestSupport.JDBC_UTIL;
+        JdbcExecutor jdbcExecutor = DatabaseTestSupport.JDBC_EXECUTOR;
 
-        bookDao = new BookDao(jdbcUtil);
-        reviewDao = new ReviewDao(jdbcUtil);
-        userDao = new UserDao(jdbcUtil);
+        bookDao = new BookDao(jdbcExecutor);
+        reviewDao = new ReviewDao(jdbcExecutor);
+        userDao = new UserDao(jdbcExecutor);
     }
 
     @Test

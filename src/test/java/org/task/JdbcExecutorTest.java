@@ -2,8 +2,8 @@ package org.task;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.task.datasource.DataSourceImpl;
-import org.task.util.JdbcUtil;
+import org.h2.jdbcx.JdbcDataSource;
+import org.task.jdbc.JdbcExecutor;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,33 +13,32 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class JdbcUtilTest {
-    private static JdbcUtil jdbcUtil;
+class JdbcExecutorTest {
+    private static JdbcExecutor jdbcExecutor;
 
     @BeforeAll
     static void setUpDatabase() {
         DatabaseTestSupport.runInitScript();
-        jdbcUtil = DatabaseTestSupport.JDBC_UTIL;
+        jdbcExecutor = DatabaseTestSupport.JDBC_EXECUTOR;
     }
 
     @Test
-    void defaultConstructorTest() {
-        assertThatCode(JdbcUtil::new).doesNotThrowAnyException();
-    }
+    void dataSourceConstructorTest() {
+        JdbcDataSource dataSource = new JdbcDataSource();
+        dataSource.setUrl(DatabaseTestSupport.URL);
+        dataSource.setUser(DatabaseTestSupport.USERNAME);
+        dataSource.setPassword(DatabaseTestSupport.PASSWORD);
 
-    @Test
-    void argsConstructorTest() throws SQLException {
-        DataSourceImpl dataSource = new DataSourceImpl();
-        assertThatCode(() -> new JdbcUtil(dataSource)).doesNotThrowAnyException();
+        assertThatCode(() -> new JdbcExecutor(dataSource)).doesNotThrowAnyException();
     }
 
     @Test
     void executeWithArgumentsTest() {
-        jdbcUtil.execute("INSERT INTO users (id, username, email, password, amount, restriction) VALUES (?, ?, ?, ?, ?, ?)",
+        jdbcExecutor.execute("INSERT INTO users (id, username, email, password, amount, restriction) VALUES (?, ?, ?, ?, ?, ?)",
                 101, "jdbc_user", "jdbc@example.com", "secret", 75, false
         );
 
-        String username = jdbcUtil.findOne(
+        String username = jdbcExecutor.findOne(
                 "SELECT username FROM users WHERE id = ?",
                 resultSet -> getString(resultSet, "username"),
                 101
@@ -50,7 +49,7 @@ class JdbcUtilTest {
 
     @Test
     void executeWithConsumerTest() {
-        jdbcUtil.execute("INSERT INTO books (id, title, author, genre, content, price) VALUES (?, ?, ?, ?, ?, ?)",
+        jdbcExecutor.execute("INSERT INTO books (id, title, author, genre, content, price) VALUES (?, ?, ?, ?, ?, ?)",
                 statement -> {
                     try {
                         statement.setLong(1, 102);
@@ -65,7 +64,7 @@ class JdbcUtilTest {
                 }
         );
 
-        Double price = jdbcUtil.findOne(
+        Double price = jdbcExecutor.findOne(
                 "SELECT price FROM books WHERE id = ?",
                 resultSet -> getDouble(resultSet),
                 102
@@ -76,7 +75,7 @@ class JdbcUtilTest {
 
     @Test
     void findOneTest() {
-        String result = jdbcUtil.findOne("SELECT username FROM users WHERE id = ?",
+        String result = jdbcExecutor.findOne("SELECT username FROM users WHERE id = ?",
                 resultSet -> getString(resultSet, "username"),
                 -1
         );
@@ -86,7 +85,7 @@ class JdbcUtilTest {
 
     @Test
     void findOneExceptionTest() {
-        assertThatThrownBy(() -> jdbcUtil.findOne("SELECT username FROM users ORDER BY id",
+        assertThatThrownBy(() -> jdbcExecutor.findOne("SELECT username FROM users ORDER BY id",
                 resultSet -> getString(resultSet, "username")
         )).isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Expected one result at most");
@@ -94,7 +93,7 @@ class JdbcUtilTest {
 
     @Test
     void findOneSqlExceptionTest() {
-        assertThatThrownBy(() -> jdbcUtil.findOne("SELECT missing_column FROM users",
+        assertThatThrownBy(() -> jdbcExecutor.findOne("SELECT missing_column FROM users",
                 resultSet -> getString(resultSet, "missing_column")
         )).isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Failed to execute the query");
@@ -102,7 +101,7 @@ class JdbcUtilTest {
 
     @Test
     void findManyTest() {
-        List<String> titles = jdbcUtil.findMany("SELECT title FROM books WHERE price >= ? ORDER BY title",
+        List<String> titles = jdbcExecutor.findMany("SELECT title FROM books WHERE price >= ? ORDER BY title",
                 resultSet -> getString(resultSet, "title"),
                 12
         );
@@ -112,7 +111,7 @@ class JdbcUtilTest {
 
     @Test
     void findManyEmptyListTest() {
-        List<String> results = jdbcUtil.findMany("SELECT title FROM books WHERE author = ?",
+        List<String> results = jdbcExecutor.findMany("SELECT title FROM books WHERE author = ?",
                 resultSet -> getString(resultSet, "title"),
                 "Nobody"
         );
@@ -122,7 +121,7 @@ class JdbcUtilTest {
 
     @Test
     void findManySqlExceptionTest() {
-        assertThatThrownBy(() -> jdbcUtil.findMany("SELECT missing_column FROM books",
+        assertThatThrownBy(() -> jdbcExecutor.findMany("SELECT missing_column FROM books",
                 resultSet -> getString(resultSet, "missing_column")
         )).isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Failed to execute the query");
@@ -130,7 +129,7 @@ class JdbcUtilTest {
 
     @Test
     void wrapSqlErrorsTest() {
-        assertThatThrownBy(() -> jdbcUtil.execute("INSERT INTO users (id, username, email, password) VALUES (?, ?, ?, ?)",
+        assertThatThrownBy(() -> jdbcExecutor.execute("INSERT INTO users (id, username, email, password) VALUES (?, ?, ?, ?)",
                 1, "duplicate", "duplicate@example.com", "secret"
         )).isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Failed to execute the statement");

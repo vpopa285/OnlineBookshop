@@ -25,6 +25,7 @@ public class Book {
         this.genre = genre;
         this.content = content;
         this.price = price;
+        COUNTER = Math.max(COUNTER, id + 1);
 
         reviews = new ArrayList<>();
     }

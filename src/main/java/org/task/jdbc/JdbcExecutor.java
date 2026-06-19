@@ -1,6 +1,8 @@
-package org.task.util;
-import org.task.datasource.DataSourceImpl;
-import org.task.datasource.HikariCPDataSource;
+package org.task.jdbc;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -15,21 +17,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.sql.DataSource;
 
-public final class JdbcUtil {
+@Component
+@Primary
+@RequiredArgsConstructor
+public final class JdbcExecutor {
 
     private final DataSource dataSource;
-
-    public JdbcUtil() {
-        dataSource = HikariCPDataSource.create();
-    }
-
-    public JdbcUtil(DataSourceImpl dataSourceImpl) {
-        dataSource = dataSourceImpl;
-    }
-
-    public JdbcUtil(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
 
     public Connection getConnection() throws SQLException {
         return dataSource.getConnection();

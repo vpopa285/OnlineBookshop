@@ -1,14 +1,16 @@
 package org.task.util;
 
+import org.task.jdbc.JdbcExecutor;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class BenchmarkUtil {
-    private final JdbcUtil jdbcUtil;
+    private final JdbcExecutor jdbcUtil;
     private final int count;
 
-    public BenchmarkUtil(JdbcUtil jdbcUtil, int count) {
+    public BenchmarkUtil(JdbcExecutor jdbcUtil, int count) {
         this.jdbcUtil = jdbcUtil;
         this.count = count;
     }

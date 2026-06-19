@@ -4,19 +4,28 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
+@ActiveProfiles("test")
 class AppTest {
+
+    @Autowired
+    private App app;
 
     private ByteArrayOutputStream output;
     private PrintStream originalOut;
-    private java.io.InputStream originalIn;
+    private InputStream originalIn;
 
     @BeforeEach
     void setUp() {
@@ -25,8 +34,8 @@ class AppTest {
         originalIn = System.in;
 
         System.setOut(new PrintStream(output));
+        app.init();
 
-        App.init();
     }
 
     @AfterEach
@@ -37,13 +46,13 @@ class AppTest {
 
     private void provideInput(String data) {
         System.setIn(new ByteArrayInputStream(data.getBytes()));
-        App.initScanner();
+        app.initScanner();
     }
 
     private void run(String input) {
         provideInput(input);
 
-        App.runMenu();
+        app.runMenu();
     }
 
     static Stream<Arguments> singleRunCases() {
@@ -62,7 +71,7 @@ class AppTest {
                 Arguments.of("6\n0\n0", "Invalid amount"),
                 Arguments.of("6\n-50\n0", "Invalid amount"),
                 Arguments.of("7\n4\n0", "Total books"),
-                Arguments.of("5\n1\n9\n0", "Invalid rating"),
+                Arguments.of("2\n1\n5\n1\n9\n0", "Invalid rating"),
                 Arguments.of("7\n3\n9999\n0", "User not found"),
                 Arguments.of("99\n0", "Invalid option")
         );

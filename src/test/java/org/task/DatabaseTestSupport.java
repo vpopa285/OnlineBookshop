@@ -1,7 +1,7 @@
 package org.task;
 
 import org.h2.jdbcx.JdbcDataSource;
-import org.task.util.JdbcUtil;
+import org.task.jdbc.JdbcExecutor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +14,7 @@ final class DatabaseTestSupport {
     static final String USERNAME = "sa";
     static final String PASSWORD = "";
 
-    static JdbcUtil JDBC_UTIL;
+    static JdbcExecutor JDBC_EXECUTOR;
 
     private static DataSource dataSource() {
         JdbcDataSource dataSource = new JdbcDataSource();
@@ -28,11 +28,11 @@ final class DatabaseTestSupport {
 
     static void runInitScript() {
         DataSource dataSource = dataSource();
-        JDBC_UTIL = new JdbcUtil(dataSource);
+        JDBC_EXECUTOR = new JdbcExecutor(dataSource);
 
         for (String statement : readInitScript().split(";")) {
             if (!statement.isBlank()) {
-                JDBC_UTIL.execute(statement);
+                JDBC_EXECUTOR.execute(statement);
             }
         }
     }

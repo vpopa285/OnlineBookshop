@@ -1,6 +1,8 @@
 package org.task.dao;
 
-import org.task.util.JdbcUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+import org.task.jdbc.JdbcExecutor;
 import org.task.model.Review;
 import org.task.model.User;
 
@@ -8,21 +10,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+@Repository
+@RequiredArgsConstructor
 public class ReviewDao {
-    private final JdbcUtil jdbcUtil;
-
-    public ReviewDao(JdbcUtil jdbcUtil) {
-        this.jdbcUtil = jdbcUtil;
-    }
+    private final JdbcExecutor jdbcExecutor;
 
     public void create(long bookId, Review review) {
-        jdbcUtil.execute("INSERT INTO reviews (user_id, book_id, rating, comment) VALUES (?, ?, ?, ?)",
+        jdbcExecutor.execute("INSERT INTO reviews (user_id, book_id, rating, comment) VALUES (?, ?, ?, ?)",
                 review.user().getId(), bookId, review.rate(), review.comment()
         );
     }
 
     public List<Review> findByBookId(long bookId) {
-        return jdbcUtil.findMany("""
+        return jdbcExecutor.findMany("""
                 SELECT r.rating, r.comment, u.id, u.username, u.email, u.password, u.amount, u.restriction
                 FROM reviews r
                 JOIN users u ON u.id = r.user_id
@@ -34,7 +34,7 @@ public class ReviewDao {
     }
 
     public void deleteByUserAndBookId(long userId, long bookId) {
-        jdbcUtil.execute("DELETE FROM reviews WHERE user_id = ? AND book_id = ?",
+        jdbcExecutor.execute("DELETE FROM reviews WHERE user_id = ? AND book_id = ?",
                 userId,
                 bookId
         );

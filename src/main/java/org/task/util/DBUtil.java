@@ -1,11 +1,22 @@
 package org.task.util;
 
-import io.github.cdimascio.dotenv.Dotenv;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.task.config.DatabaseConfiguration;
 
+@Component
 public class DBUtil {
-    private static final Dotenv DOTENV = Dotenv.load();
+    DatabaseConfiguration configuration;
 
-    public static final String URL = "jdbc:postgresql://localhost:" + DOTENV.get("DB_PORT") + "/" + DOTENV.get("DB_NAME");
-    public static final String USER = DOTENV.get("DB_USER");
-    public static final String PASSWORD = DOTENV.get("DB_PASSWORD");
+    public static String URL;
+    public static String USER;
+    public static String PASSWORD;
+
+    @Autowired
+    public DBUtil(DatabaseConfiguration configuration) {
+        this.configuration = configuration;
+        URL = configuration.getUrl();
+        USER = configuration.getUsername();
+        PASSWORD = configuration.getPassword();
+    }
 }
