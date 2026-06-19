@@ -129,8 +129,10 @@ public final class JdbcExecutor {
             setArguments(statement, args);
 
             try (ResultSet resultSet = statement.executeQuery()) {
-                resultSet.next();
-                return resultSet.getInt(1);
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+                return 0;
             }
         }
     }
@@ -140,8 +142,10 @@ public final class JdbcExecutor {
             setArguments(statement, args);
 
             try (ResultSet resultSet = statement.executeQuery()) {
-                resultSet.next();
-                return resultSet.getInt(1);
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+                return 0;
             }
         }
     }
@@ -151,8 +155,10 @@ public final class JdbcExecutor {
             setArguments(statement, args);
 
             try (ResultSet resultSet = statement.executeQuery()) {
-                resultSet.next();
-                return resultSet.getBigDecimal(1);
+                if (resultSet.next()) {
+                    return resultSet.getBigDecimal(1);
+                }
+                return null;
             }
         }
     }
