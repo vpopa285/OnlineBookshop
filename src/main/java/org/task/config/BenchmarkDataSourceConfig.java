@@ -1,6 +1,6 @@
 package org.task.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -11,22 +11,25 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 @Configuration
+@EnableConfigurationProperties(DatabaseConfiguration.class)
 @Profile("benchmark")
 public class BenchmarkDataSourceConfig {
 
     @Bean
-    public DataSource singleConnectionDataSource(
-            @Value("${spring.datasource.url}") String url,
-            @Value("${spring.datasource.username}") String username,
-            @Value("${spring.datasource.password}") String password) throws SQLException {
-        return new DataSourceImpl(url, username, password);
+    public DataSource singleConnectionDataSource(DatabaseConfiguration config) throws SQLException {
+        return new DataSourceImpl(
+                config.getUrl(),
+                config.getUsername(),
+                config.getPassword()
+        );
     }
 
     @Bean
-    public DataSource pooledBenchmarkDataSource(
-            @Value("${spring.datasource.url}") String url,
-            @Value("${spring.datasource.username}") String username,
-            @Value("${spring.datasource.password}") String password) {
-        return HikariCPDataSource.create(url, username, password);
+    public DataSource pooledBenchmarkDataSource(DatabaseConfiguration config) {
+        return HikariCPDataSource.create(
+                config.getUrl(),
+                config.getUsername(),
+                config.getPassword()
+        );
     }
 }
