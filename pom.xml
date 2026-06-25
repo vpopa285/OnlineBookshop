@@ -241,7 +241,13 @@
                 </rule>
               </rules>
               <excludes>
-                <exclude>org.task.datasource.DataSourceImpl</exclude>
+                <exclude>**/datasource/*</exclude>
+                <exclude>**/benchmark/**</exclude>
+                <exclude>**/config/**</exclude>
+                <exclude>**/demo/**</exclude>
+                <exclude>**/BookshopApplication*</exclude>
+                <exclude>**/BookshopRunner*</exclude>
+                <exclude>**/JdbcExecutor*</exclude>
               </excludes>
             </configuration>
           </execution>

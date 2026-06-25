@@ -1,7 +1,6 @@
-package org.task;
+package org.task.util;
 
 import org.junit.jupiter.api.Test;
-import org.task.util.BenchmarkUtil;
 import org.task.jdbc.JdbcExecutor;
 
 import java.util.concurrent.atomic.AtomicInteger;
