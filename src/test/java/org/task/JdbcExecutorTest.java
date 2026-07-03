@@ -42,7 +42,7 @@ class JdbcExecutorTest {
                 "SELECT username FROM users WHERE id = ?",
                 resultSet -> getString(resultSet, "username"),
                 101
-        );
+        ).get();
 
         assertThat(username).isEqualTo("jdbc_user");
     }
@@ -68,7 +68,7 @@ class JdbcExecutorTest {
                 "SELECT price FROM books WHERE id = ?",
                 resultSet -> getDouble(resultSet),
                 102
-        );
+        ).get();
 
         assertThat(price).isEqualTo(18.50);
     }
@@ -78,7 +78,7 @@ class JdbcExecutorTest {
         String result = jdbcExecutor.findOne("SELECT username FROM users WHERE id = ?",
                 resultSet -> getString(resultSet, "username"),
                 -1
-        );
+        ).orElse(null);
 
         assertThat(result).isNull();
     }

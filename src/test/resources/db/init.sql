@@ -1,7 +1,7 @@
 RUNSCRIPT FROM 'classpath:db/initSchema.sql';
 
 INSERT INTO users (id, username, email, password, amount, restriction) VALUES
-    (1, 'alice_reads', 'alice@example.com', 'hashed_pw_1', 150.00, FALSE),
+    (1, 'alice_reads', 'alice_reads@example.com', 'hashed_pw_1', 150.00, FALSE),
     (2, 'bob_pages', 'bob@example.com', 'hashed_pw_2', 80.00, FALSE),
     (3, 'restricted_user', 'restricted@example.com', 'hashed_pw_3', 0.00, TRUE);
 
@@ -14,3 +14,7 @@ INSERT INTO reviews (user_id, book_id, rating, comment) VALUES
     (1, 1, 5, 'An absolute masterpiece.'),
     (2, 1, 4, 'Great atmosphere.'),
     (2, 2, 5, 'Chilling and prophetic.');
+
+ALTER TABLE users ALTER COLUMN id RESTART WITH 4;
+ALTER TABLE books ALTER COLUMN id RESTART WITH 4;
+ALTER TABLE reviews ALTER COLUMN id RESTART WITH 4;

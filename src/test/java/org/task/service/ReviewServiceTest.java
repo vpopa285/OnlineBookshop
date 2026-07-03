@@ -6,13 +6,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
+import org.task.BookshopApplication;
 import org.task.model.Book;
 import org.task.model.Review;
 import org.task.model.User;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@SpringBootTest(classes = BookshopApplication.class)
 @ActiveProfiles("test")
 @Sql(scripts = "/db/initSchema.sql")
 public class ReviewServiceTest {
@@ -23,9 +24,24 @@ public class ReviewServiceTest {
     @Autowired
     UserService userService;
 
-    Book book = new Book("Test", "JP", "IT", "", 20);
-    User user = new User("u", "e", "p");
-    Review review = new Review(5, "nice", user);
+    Book book = Book.builder()
+            .title("Test")
+            .author("JP")
+            .genre("IT")
+            .content("")
+            .price(20)
+            .build();
+
+    User user = User.builder()
+            .username("u")
+            .email("e")
+            .password("p")
+            .build();
+    Review review = Review.builder()
+            .rate(5)
+            .comment("nice")
+            .user(user)
+            .build();
 
     @Test
     void shouldCreateAndFindReview() {
@@ -34,7 +50,7 @@ public class ReviewServiceTest {
         reviewService.create(book.getId(), review);
 
         assertThat(reviewService.findByBookId(book.getId()))
-                .anyMatch(r -> r.user().getId() == (user.getId()));
+                .anyMatch(r -> r.getUser().getId().equals(user.getId()));
     }
 
     @Test

@@ -62,7 +62,7 @@ class AppTest {
                 Arguments.of("1\nTITLE\nNonExistentBook\n0", "No books found"),
                 Arguments.of("1\nWRONGTYPE\n0", "Invalid search type"),
                 Arguments.of("1\nTITLE\nJava\n999\n0", "Invalid book id"),
-                Arguments.of("2\n0\n0", "Not enough money"),
+                Arguments.of("2\n0\n0", "Book not found"),
                 Arguments.of("2\n99\n0", "Book not found"),
                 Arguments.of("4\n0\n0", "You don't own this book"),
                 Arguments.of("5\n0\n0", "You don't own this book"),

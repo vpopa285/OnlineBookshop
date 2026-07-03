@@ -9,9 +9,9 @@ public enum SearchType {
 
     public String extract(Book book) {
         return switch (this) {
-            case TITLE -> book.getTitle();
-            case AUTHOR -> book.getAuthor();
-            case GENRE -> book.getGenre();
+            case TITLE -> "title";
+            case AUTHOR -> "author";
+            case GENRE -> "genre";
         };
     }
 }

@@ -6,14 +6,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
+import org.task.BookshopApplication;
 import org.task.jdbc.JdbcExecutor;
 import org.task.model.Book;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@SpringBootTest(classes = BookshopApplication.class)
 @ActiveProfiles("test")
 @Sql(scripts = "/db/initSchema.sql")
 public class BookServiceTest {
@@ -23,13 +25,19 @@ public class BookServiceTest {
     @Autowired
     JdbcExecutor jdbcExecutor;
 
-    Book book = new Book("Test", "JP", "IT", "", 20);
+    Book book = Book.builder()
+            .title("Test")
+            .author("JP")
+            .genre("IT")
+            .content("")
+            .price(20)
+            .build();
 
     @Test
     void shouldCreateAndFindBook() {
         bookService.create(book);
 
-        Book found = bookService.findById(book.getId());
+        Book found = bookService.findById(book.getId()).get();
 
         assertThat(found.getId()).isEqualTo(book.getId());
         assertThat(found.getTitle()).isEqualTo("Test");
@@ -42,7 +50,7 @@ public class BookServiceTest {
     void shouldCreateAndFindOnlyOneBook() {
         bookService.create(book);
 
-        Book updated = new Book(book.getId(), "Update", "LM", "IT", "", 10);
+        Book updated = new Book(book.getId(), "Update", "LM", "IT", "", 10, null);
         bookService.update(updated);
 
         List<Book> foundBooks = bookService.findAll();
@@ -55,10 +63,10 @@ public class BookServiceTest {
     void shouldUpdateBook() {
         bookService.create(book);
 
-        Book updated = new Book(book.getId(), "Update", "LM", "IT", "", 10);
+        Book updated = new Book(book.getId(), "Update", "LM", "IT", "", 10, null);
         bookService.update(updated);
 
-        Book found = bookService.findById(book.getId());
+        Book found = bookService.findById(book.getId()).get();
 
         assertThat(updated.getTitle()).isEqualTo(found.getTitle());
     }
@@ -70,9 +78,9 @@ public class BookServiceTest {
 
         bookService.deleteById(book.getId());
 
-        Book extract = bookService.findById(book.getId());
+        Optional<Book> extract = bookService.findById(book.getId());
 
-        assertThat(extract).isNull();
+        assertThat(extract).isEmpty();
     }
 
     @Test
@@ -83,7 +91,7 @@ public class BookServiceTest {
         jdbcExecutor.execute("INSERT INTO users(id, username, email, password, amount, restriction) VALUES (1, 'u', 'e', 'p', 0, false)");
         jdbcExecutor.execute("INSERT INTO reviews(id, book_id, user_id, rating, comment) VALUES (1, ?, 1, 5, 'good')", book.getId());
 
-        Book result = bookService.findByIdWithReviews(book.getId());
+        Book result = bookService.findByIdWithReviews(book.getId()).get();
 
         assertThat(result.getReviews().size()).isEqualTo(1);
     }
