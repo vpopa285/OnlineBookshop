@@ -55,7 +55,7 @@ public class App {
     }
 
     private void seedBook(String title, String author, String genre, String content, double price) {
-        if (bookService.findAll().stream().noneMatch(b -> b.getTitle().equals(title))) {
+        if (!bookService.existsByTitle(title)) {
             bookService.create(Book.builder()
                     .title(title)
                     .author(author)
