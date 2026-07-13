@@ -36,7 +36,7 @@ class DaoTest {
 
     @Test
     void preloadedBookTest() {
-        Book book = bookDao.findById(1);
+        Book book = bookDao.findById(1).orElse(null);
 
         assertThat(book).isNotNull();
         assertThat(book.getTitle()).isEqualTo("The Great Gatsby");
@@ -46,23 +46,47 @@ class DaoTest {
 
     @Test
     void returnNullForMissingBookTest() {
-        assertThat(bookDao.findById(-100)).isNull();
+        assertThat(bookDao.findById(-100)).isEmpty();
     }
 
     @Test
     void CRUDTest() {
-        Book book = new Book(201, "Refactoring", "Martin Fowler", "Programming", "Code design.", 45);
+
+        Book book = Book.builder()
+                .title("Refactoring")
+                .author("Martin Fowler")
+                .genre("Programming")
+                .content("Code design.")
+                .price(45)
+                .build();
 
         bookDao.create(book);
-        assertThat(bookDao.findById(201).getTitle()).isEqualTo("Refactoring");
 
-        Book updated = new Book(201, "Refactoring", "Martin Fowler", "Programming", "Improving existing code.", 40);
+        Long id = book.getId();
+
+        assertThat(bookDao.findById(id).get().getTitle())
+                .isEqualTo("Refactoring");
+
+        Book updated = Book.builder()
+                .id(id)
+                .title("Refactoring")
+                .author("Martin Fowler")
+                .genre("Programming")
+                .content("Improving existing code.")
+                .price(40)
+                .build();
+
         bookDao.update(updated);
-        assertThat(bookDao.findById(201).getContent()).isEqualTo("Improving existing code.");
-        assertThat(bookDao.findById(201).getPrice()).isEqualTo(40);
 
-        bookDao.deleteById(201);
-        assertThat(bookDao.findById(201)).isNull();
+        assertThat(bookDao.findById(id).get().getContent())
+                .isEqualTo("Improving existing code.");
+
+        assertThat(bookDao.findById(id).get().getPrice())
+                .isEqualTo(40);
+
+        bookDao.deleteById(id);
+
+        assertThat(bookDao.findById(id)).isEmpty();
     }
 
     @Test
@@ -75,19 +99,19 @@ class DaoTest {
 
     @Test
     void fetchBookTest() {
-        Book book = bookDao.findByIdWithReviews(1);
+        Book book = bookDao.findByIdWithReviews(1).get();
 
         assertThat(book).isNotNull();
         assertThat(book.getReviews()).hasSize(2);
-        assertThat(book.getReviews()).extracting(Review::comment)
+        assertThat(book.getReviews()).extracting(Review::getComment)
                 .containsExactly("An absolute masterpiece.", "Great atmosphere.");
-        assertThat(book.getReviews()).extracting(review -> review.user().getUsername())
+        assertThat(book.getReviews()).extracting(review -> review.getUser().getUsername())
                 .containsExactly("alice_reads", "bob_pages");
     }
 
     @Test
     void fetchBookWithoutReviewsTest() {
-        Book book = bookDao.findByIdWithReviews(3);
+        Book book = bookDao.findByIdWithReviews(3).get();
 
         assertThat(book).isNotNull();
         assertThat(book.getReviews()).isEmpty();
@@ -95,7 +119,7 @@ class DaoTest {
 
     @Test
     void returnNullTest() {
-        Book book = bookDao.findByIdWithReviews(-100);
+        Book book = bookDao.findByIdWithReviews(-100).orElse(null);
 
         assertThat(book).isNull();
     }
@@ -122,51 +146,90 @@ class DaoTest {
 
     @Test
     void createAndDeleteReviewTest() {
-        User user = userDao.findById(1);
-        reviewDao.create(3, new Review(4, "Useful and practical.", user));
+        User user = userDao.findById(1).orElse(null);
+        reviewDao.create(3, Review.builder()
+                .rate(4)
+                .comment("Useful and practical.")
+                .user(user)
+                .build());
 
-        assertThat(reviewDao.findByBookId(3)).extracting(Review::comment)
+        assertThat(reviewDao.findByBookId(3)).extracting(Review::getComment)
                 .contains("Useful and practical.");
 
         reviewDao.deleteByUserAndBookId(1, 3);
-        assertThat(reviewDao.findByBookId(3)).extracting(Review::comment)
+        assertThat(reviewDao.findByBookId(3)).extracting(Review::getComment)
                 .doesNotContain("Useful and practical.");
     }
 
     @Test
     void createUpdateAndDeleteUserTest() {
-        User user = new User(301, "new_reader", "new@example.com", "secret", 25, false);
+
+        User user = User.builder()
+                .username("new_reader")
+                .email("new@example.com")
+                .password("secret")
+                .amount(25)
+                .restriction(false)
+                .build();
 
         userDao.create(user);
-        assertThat(userDao.findById(301).getUsername()).isEqualTo("new_reader");
 
-        user.addFunds(50);
+        Long id = user.getId();
+
+        assertThat(userDao.findById(id).get().getUsername())
+                .isEqualTo("new_reader");
+
+        user.setAmount(50);
         user.setRestriction(true);
+
         userDao.update(user);
 
-        User updated = userDao.findById(301);
-        assertThat(updated.getAmount()).isEqualTo(75);
-        assertThat(updated.isRestriction());
+        User updated = userDao.findById(id).get();
 
-        userDao.deleteById(301);
-        assertThat(userDao.findById(301)).isNull();
+        assertThat(updated.getAmount()).isEqualTo(50);
+        assertThat(updated.isRestriction()).isTrue();
+
+        userDao.deleteById(id);
+
+        assertThat(userDao.findById(id)).isEmpty();
     }
 
     @Test
     void rejectDuplicateUserEmailTest() {
-        User duplicate = new User(302, "someone", "alice@example.com", "secret", 10, false);
+
+        User user1 = User.builder()
+                .username("alice")
+                .email("alice@example.com")
+                .password("secret")
+                .amount(10)
+                .restriction(false)
+                .build();
+
+        userDao.create(user1);
+
+        User duplicate = User.builder()
+                .username("someone")
+                .email("alice@example.com")
+                .password("secret")
+                .amount(10)
+                .restriction(false)
+                .build();
 
         assertThatThrownBy(() -> userDao.create(duplicate))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Failed to execute the statement");
+                .hasMessageContaining("Failed to create user");
     }
 
     @Test
     void rejectInvalidReviewRatingTest() {
-        User user = userDao.findById(1);
+        User user = userDao.findById(1).get();
 
-        assertThatThrownBy(() -> reviewDao.create(2, new Review(6, "Too high.", user)))
+        assertThatThrownBy(() -> reviewDao.create(2, Review.builder()
+                .rate(6)
+                .comment("Too high")
+                .user(user)
+                .build()))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Failed to execute the statement");
+                .hasMessageContaining("Failed to create review");
     }
 }

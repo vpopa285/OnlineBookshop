@@ -2,10 +2,12 @@ package org.task.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.task.SearchType;
 import org.task.dao.BookDao;
 import org.task.model.Book;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -16,7 +18,7 @@ public class BookService {
         bookDao.create(book);
     }
 
-    public Book findById(long id) {
+    public Optional<Book> findById(long id) {
         return bookDao.findById(id);
     }
 
@@ -24,8 +26,16 @@ public class BookService {
         return bookDao.findAll();
     }
 
-    public Book findByIdWithReviews(long id) {
+    public Optional<Book> findByIdWithReviews(long id) {
         return bookDao.findByIdWithReviews(id);
+    }
+
+    public List<Book> findAllBooksByParam(SearchType searchType, String searchParam) {
+        return bookDao.search(searchType, searchParam);
+    }
+
+    public boolean existsByTitle(String title) {
+        return bookDao.existsByTitle(title);
     }
 
     public void update(Book book) {
@@ -34,5 +44,9 @@ public class BookService {
 
     public void deleteById(long id) {
         bookDao.deleteById(id);
+    }
+
+    public long count() {
+        return bookDao.count();
     }
 }

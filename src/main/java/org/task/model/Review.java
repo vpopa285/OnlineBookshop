@@ -1,3 +1,30 @@
 package org.task.model;
 
-public record Review(int rate, String comment, User user) { }
+import jakarta.persistence.*;
+import lombok.*;
+
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Entity
+@Table(name = "reviews")
+public class Review{
+        @Setter
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+
+        @ManyToOne
+        @JoinColumn(name = "user_id")
+        private User user;
+
+        @Setter
+        @ManyToOne
+        @JoinColumn(name = "book_id")
+        private Book book;
+
+        @Column(name = "rating")
+        private int rate;
+        private String comment;
+}

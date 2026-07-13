@@ -11,10 +11,7 @@ import org.task.service.UserService;
 
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -22,34 +19,52 @@ public class App {
 
     private static Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
 
-    private final Library library;
     @Getter
     private final BookService bookService;
     @Getter
     private final UserService userService;
     @Getter
     private final ReviewService reviewService;
-    private User user;
-    private final List<User> users = new ArrayList<>();
-    private Administrator admin;
 
     public void run() {
         init();
         runMenu();
     }
 
-    void init() {
-        library.getLibrary().clear();
-        users.clear();
+    private User user;
+    private User admin;
 
-        user = new User(0, "user", "ex@test.com", "1234", 15, false);
-        admin = new Administrator("admin", "admin@test.com", "admin");
+    public void init() {
+        user = userService.findByUsername("user").orElseGet(() -> {
+            User newUser = new User(null, "user", "ex@test.com", "1234", 15, false, false);
+            userService.create(newUser);
+            return newUser;
+        });
+        userService.resetUserActivity(user.getId());
+        user.setAmount(15);
+        user.setRestriction(false);
+        userService.update(user);
 
-        admin.addBook(library, new Book(0, "Java", "James", "Programming", "Full Java content...", 20));
-        admin.addBook(library, new Book(1, "Python", "Guido", "Programming", "Python content...", 15));
+        admin = userService.findByUsername("admin").orElseGet(() -> {
+            User newAdmin = new User(null, "admin", "admin@test.com", "admin", 100, false, true);
+            userService.create(newAdmin);
+            return newAdmin;
+        });
 
-        users.add(new User(1, "mark", "mark@test.com", "1234", 0, false));
-        users.add(new User(2, "ann", "ann@test.com", "1234", 0, false));
+        seedBook("Python", "James", "Programming", "Python content...", 10);
+        seedBook("Java", "James", "Programming", "Java content...", 20);
+    }
+
+    private void seedBook(String title, String author, String genre, String content, double price) {
+        if (bookService.findAll().stream().noneMatch(b -> b.getTitle().equals(title))) {
+            bookService.create(Book.builder()
+                    .title(title)
+                    .author(author)
+                    .genre(genre)
+                    .content(content)
+                    .price(price)
+                    .build());
+        }
     }
 
     void initScanner() {
@@ -86,7 +101,7 @@ public class App {
         }
     }
 
-    private static void previewBook(Book book) {
+    private void previewBook(Book book) {
         System.out.println("\nTitle: " + book.getTitle());
         System.out.println("Author: " + book.getAuthor());
         System.out.println("Genre: " + book.getGenre());
@@ -96,8 +111,8 @@ public class App {
             System.out.println("No reviews yet");
         } else {
             book.getReviews().forEach(r ->
-                    System.out.println("- " + r.user().getUsername()
-                            + " (" + r.rate() + "): " + r.comment())
+                    System.out.println("- " + r.getUser().getUsername()
+                            + " (" + r.getRate() + "): " + r.getComment())
             );
         }
     }
@@ -116,7 +131,7 @@ public class App {
         System.out.println("Value:");
         String value = scanner.nextLine();
 
-        Set<Book> result = user.searchBook(library, type, value);
+        List<Book> result = bookService.findAllBooksByParam(type, value);
 
         if (result.isEmpty()) {
             System.out.println("No books found");
@@ -130,53 +145,76 @@ public class App {
 
         if (id == -1) return;
 
-        result.stream()
-                .filter(b -> b.getId() == id)
-                .findFirst()
-                .ifPresentOrElse(
-                        App::previewBook,
-                        () -> System.out.println("Invalid book id")
-                );
+        bookService.findByIdWithReviews(id).ifPresentOrElse(
+                this::previewBook,
+                () -> System.out.println("Invalid book id")
+        );
     }
 
     private void buy() {
         System.out.println("Book id:");
         long id = readLong();
 
-        library.findById(id)
-                .ifPresentOrElse(
-                        user::buy,
-                        () -> System.out.println("Book not found")
-                );
-    }
-
-    private void showPurchased() {
-        if (user.getPurchasedBooks().isEmpty()) {
-            System.out.println("No purchased books");
+        Optional<Book> book = bookService.findById(id);
+        if (book.isEmpty()) {
+            System.out.println("Book not found");
             return;
         }
 
-        user.getPurchasedBooks().forEach(b -> System.out.println(b.getTitle()));
+        if (userService.getPurchasedBooks(user).stream().anyMatch(b -> b.getId().equals(id))) {
+            System.out.println(book.get().getTitle());
+            return;
+        }
+
+        if (user.getAmount() < book.get().getPrice()) {
+            System.out.println("Not enough money");
+            return;
+        }
+
+        if (userService.buy(user, id)) {
+            System.out.println("Successfully purchased the book!");
+        } else {
+            System.out.println("Something went wrong!");
+        }
+    }
+
+    private void showPurchased() {
+        Set<Book> purchasedBooks = userService.getPurchasedBooks(user);
+        if (purchasedBooks.isEmpty()) {
+            System.out.println("You haven't purchased any books yet.");
+        } else {
+            System.out.println("Your purchased books:");
+            purchasedBooks.forEach(b -> System.out.println(b.getId() + " - " + b.getTitle()));
+        }
     }
 
     private void readBook() {
         System.out.println("Book id:");
         long id = readLong();
 
-        user.getPurchasedBooks().stream()
+        userService.getPurchasedBooks(user).stream()
                 .filter(b -> b.getId() == id)
                 .findFirst()
                 .ifPresentOrElse(
-                        b -> System.out.println(b.viewBook()),
+                        b -> System.out.println(
+                                "\nTitle: " + b.getTitle() +
+                                "\nAuthor: " + b.getAuthor() +
+                                "\nGenre: " + b.getGenre() +
+                                "\nContent: " + b.getContent()),
                         () -> System.out.println("You don't own this book")
                 );
     }
 
     private void review() {
+        if (user.isRestriction()) {
+            System.out.println("You don't have rights to left a comment!");
+            return;
+        }
+
         System.out.println("Book id:");
         long id = readLong();
 
-        Book book = user.getPurchasedBooks().stream()
+        Book book = userService.getPurchasedBooks(user).stream()
                 .filter(b -> b.getId() == id)
                 .findFirst()
                 .orElse(null);
@@ -197,7 +235,7 @@ public class App {
         System.out.println("Comment:");
         String comment = scanner.nextLine();
 
-        user.review(book, rate, comment);
+        userService.reviewBook(user, book, rate, comment);
     }
 
     private void addMoney() {
@@ -209,7 +247,7 @@ public class App {
             return;
         }
 
-        user.addFunds(amount);
+        userService.addFunds(user, amount);
     }
 
     private void adminMenu() {
@@ -217,7 +255,7 @@ public class App {
                 1. Add book
                 2. Remove book
                 3. Restrict user
-                4. See statistics
+                4. Total books
                 """);
 
         String choice = scanner.nextLine();
@@ -239,35 +277,51 @@ public class App {
                 System.out.println("Price:");
                 double price = readDouble();
 
-                admin.addBook(library, new Book(title, author, genre, content, price));
+                bookService.create(Book.builder()
+                        .title(title)
+                        .author(author)
+                        .genre(genre)
+                        .content(content)
+                        .price(price)
+                        .build()
+                );
             }
             case "2" -> {
                 System.out.println("Book id:");
                 long id = readLong();
 
-                admin.removeBook(library, id);
+                if (bookService.findById(id).isPresent()) {
+                    bookService.deleteById(id);
+                    System.out.println("Book removed successfully.");
+                } else {
+                    System.out.println("Book not found.");
+                }
             }
             case "3" -> {
                 System.out.println("Users:");
-                users.forEach(u -> System.out.println(u.getId() + " - " + u.getUsername()));
+                userService.findAll().forEach(u -> System.out.println(u.getId() + " - " + u.getUsername()));
 
                 System.out.println("User id:");
                 long id = readLong();
 
-                users.stream()
-                        .filter(u -> u.getId() == id)
-                        .findFirst()
-                        .ifPresentOrElse(
-                                admin::setRestrictions,
-                                () -> System.out.println("User not found")
-                        );
+                if (userService.findById(id).isEmpty()) {
+                    System.out.println("User not found");
+                    return;
+                }
+
+                if (userService.setRestrictionsByUserId(admin, id)) {
+                    System.out.println("User restrictions updated.");
+                } else {
+                    System.out.println("Something went wrong!");
+                }
+
             }
-            case "4" -> System.out.println(admin.seeStatistics(library));
+            case "4" -> System.out.println("Total books: " + bookService.count());
             default -> System.out.println("Invalid option");
         }
     }
 
-    private static long readLong() {
+    private long readLong() {
         try {
             return Long.parseLong(scanner.nextLine());
         } catch (Exception e) {
@@ -276,7 +330,7 @@ public class App {
         }
     }
 
-    private static int readInt() {
+    private int readInt() {
         try {
             return Integer.parseInt(scanner.nextLine());
         } catch (Exception e) {
@@ -285,7 +339,7 @@ public class App {
         }
     }
 
-    private static double readDouble() {
+    private double readDouble() {
         try {
             return Double.parseDouble(scanner.nextLine());
         } catch (Exception e) {

@@ -13,6 +13,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.sql.DataSource;
@@ -50,24 +51,28 @@ public final class JdbcExecutor {
         }
     }
 
-    public <T> T findOne(String query, Function<ResultSet, T> mapper, Object... args) {
+    public <T> Optional<T> findOne(String query, Function<ResultSet, T> mapper, Object... args) {
         Objects.requireNonNull(mapper);
 
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
+
             setArguments(statement, args);
 
             ResultSet resultSet = statement.executeQuery();
+
             if (!resultSet.next()) {
-                return null;
+                return Optional.empty();
             }
 
             T result = mapper.apply(resultSet);
+
             if (resultSet.next()) {
-                throw new RuntimeException("Expected one result at most");
+                throw new RuntimeException("Expected one result at most, but query returned multiple rows");
             }
 
-            return result;
+            return Optional.of(result);
+
         } catch (SQLException e) {
             throw new RuntimeException("Failed to execute the query", e);
         }
@@ -137,8 +142,8 @@ public final class JdbcExecutor {
         }
     }
 
-    public static int findInt(Connection connection, String query, Object... args) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+    public int findInt(String query, Object... args) {
+        try (PreparedStatement statement = dataSource.getConnection().prepareStatement(query)) {
             setArguments(statement, args);
 
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -147,6 +152,8 @@ public final class JdbcExecutor {
                 }
                 return 0;
             }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to execute the query", e);
         }
     }
 

@@ -4,7 +4,8 @@ CREATE TABLE users (
     email VARCHAR(120) NOT NULL UNIQUE,
     password TEXT NOT NULL,
     amount NUMERIC(10,2) DEFAULT 0,
-    restrictions BOOLEAN DEFAULT FALSE
+    restriction BOOLEAN DEFAULT FALSE,
+    is_admin BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE user_wallet (
@@ -19,7 +20,8 @@ CREATE TABLE books (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     author VARCHAR(255) NOT NULL,
-    description TEXT,
+    genre VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL DEFAULT '',
     price NUMERIC(10,2) NOT NULL
 );
 
