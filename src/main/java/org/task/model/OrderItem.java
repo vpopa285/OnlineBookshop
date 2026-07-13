@@ -5,6 +5,7 @@ import lombok.*;
 
 @Getter
 @AllArgsConstructor
+@RequiredArgsConstructor
 @NoArgsConstructor
 @Builder
 @Entity
