@@ -38,7 +38,6 @@ CREATE TABLE reviews (
 CREATE TABLE orders (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    total_price NUMERIC(10,2) NOT NULL DEFAULT 0,
     status VARCHAR(30) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users(id)
