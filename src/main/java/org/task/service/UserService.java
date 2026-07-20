@@ -3,6 +3,10 @@ package org.task.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.task.dto.AmountUpdateRequest;
+import org.task.dto.BookReadResponse;
+import org.task.dto.UserRequest;
+import org.task.dto.UserResponse;
 import org.task.model.*;
 import org.task.repositories.*;
 
@@ -24,12 +28,28 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public UserResponse createResponse(UserRequest request) {
+        return userToResponse(userRepository.save(requestToUser(request)));
+    }
+
     public Optional<User> findById(long id) {
         return userRepository.findById(id);
     }
 
+    public Optional<UserResponse> findResponseById(Long id) {
+        return userRepository.findById(id)
+                .map(this::userToResponse);
+    }
+
     public List<User> findAll() {
         return userRepository.findAll();
+    }
+
+    public List<UserResponse> findAllResponses() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::userToResponse)
+                .toList();
     }
 
     public Optional<User> findByUsername(String username) {
@@ -40,8 +60,38 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public UserResponse update(Long id, UserRequest request) {
+        User user = requestToUser(request);
+        user.setId(id);
+
+        return userToResponse(userRepository.save(user));
+    }
+
+    public Optional<UserResponse> update(Long id, AmountUpdateRequest request) {
+        return userRepository.findById(id)
+                .map(user -> {
+                    user.setAmount(request.price());
+                    return userToResponse(userRepository.save(user));
+                });
+    }
+
     public void deleteById(long id) {
         userRepository.deleteById(id);
+    }
+
+    public Optional<BookReadResponse> findReadableBook(Long userId, Long bookId) {
+        return userRepository.findById(userId)
+                .flatMap(user -> getPurchasedBooks(user)
+                        .stream()
+                        .filter(book -> book.getId().equals(bookId))
+                        .findFirst())
+                .map(book -> new BookReadResponse(
+                        book.getId(),
+                        book.getTitle(),
+                        book.getAuthor(),
+                        book.getGenre(),
+                        book.getContent()
+                ));
     }
 
     @Transactional
@@ -124,4 +174,24 @@ public class UserService {
 
         return true;
     }
+
+    public User requestToUser(UserRequest request) {
+        return User.builder()
+                .username(request.username())
+                .email(request.email())
+                .password(request.password())
+                .amount(0)
+                .restriction(false)
+                .isAdmin(false)
+                .build();
+    }
+
+    private UserResponse userToResponse(User user) {
+        return new UserResponse(
+                user.getUsername(),
+                user.getEmail(),
+                user.isRestriction()
+        );
+    }
+
 }
