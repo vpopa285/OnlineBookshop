@@ -21,6 +21,7 @@ public class Book {
     private String author;
     private String genre;
     private String content;
+    @Setter
     private double price;
 
     @Setter
