@@ -1,3 +1,8 @@
 package org.task.dto;
 
-public record PriceUpdateRequest(double price) { }
+import jakarta.validation.constraints.Positive;
+
+public record PriceUpdateRequest(
+        @Positive(message = "Price must be positive")
+        double price
+) { }

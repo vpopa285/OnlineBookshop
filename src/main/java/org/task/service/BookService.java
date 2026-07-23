@@ -1,16 +1,17 @@
 package org.task.service;
 
+import java.util.List;
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.task.SearchType;
 import org.task.dto.BookRequest;
 import org.task.dto.BookResponse;
 import org.task.dto.PriceUpdateRequest;
+import org.task.exceptions.BookNotFoundException;
 import org.task.model.Book;
 import org.task.repositories.BookRepository;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,9 +30,8 @@ public class BookService {
         return bookRepository.findById(id);
     }
 
-    public Optional<BookResponse> findResponseById(long id) {
-        return bookRepository.findById(id)
-                .map(this::bookToResponse);
+    public BookResponse findResponseById(Long id) {
+        return bookToResponse(getBookOrThrow(id));
     }
 
     public List<BookResponse> findAllResponses() {
@@ -70,19 +70,28 @@ public class BookService {
     }
 
     public BookResponse update(Long id, BookRequest bookRequest) {
-        return bookToResponse(bookRepository.save(requestToBook(id, bookRequest)));
+        Book existingBook = getBookOrThrow(id);
+        Book book = new Book(
+                existingBook.getId(),
+                bookRequest.title(),
+                bookRequest.author(),
+                bookRequest.genre(),
+                bookRequest.content(),
+                bookRequest.price(),
+                existingBook.getReviews()
+        );
+
+        return bookToResponse(bookRepository.save(book));
     }
 
-    public Optional<BookResponse> update(Long id, PriceUpdateRequest request) {
-        return bookRepository.findById(id)
-                .map(book -> {
-                    book.setPrice(request.price());
-                    return bookToResponse(bookRepository.save(book));
-                });
+    public BookResponse update(Long id, PriceUpdateRequest request) {
+        Book book = getBookOrThrow(id);
+        book.setPrice(request.price());
+        return bookToResponse(bookRepository.save(book));
     }
 
     public void deleteById(long id) {
-        bookRepository.deleteById(id);
+        bookRepository.delete(getBookOrThrow(id));
     }
 
     private Book requestToBook(Long id, BookRequest bookRequest) {
@@ -105,5 +114,10 @@ public class BookService {
                 book.getContent(),
                 book.getPrice()
         );
+    }
+
+    private Book getBookOrThrow(Long id) {
+        return bookRepository.findById(id)
+                .orElseThrow(() -> new BookNotFoundException(id));
     }
 }

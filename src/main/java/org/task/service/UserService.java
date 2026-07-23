@@ -1,5 +1,10 @@
 package org.task.service;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -7,13 +12,10 @@ import org.task.dto.AmountUpdateRequest;
 import org.task.dto.BookReadResponse;
 import org.task.dto.UserRequest;
 import org.task.dto.UserResponse;
+import org.task.exceptions.BookNotFoundException;
+import org.task.exceptions.UserNotFoundException;
 import org.task.model.*;
 import org.task.repositories.*;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -36,9 +38,10 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public Optional<UserResponse> findResponseById(Long id) {
+    public UserResponse findResponseById(Long id) {
         return userRepository.findById(id)
-                .map(this::userToResponse);
+                .map(this::userToResponse)
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     public List<User> findAll() {
@@ -67,19 +70,25 @@ public class UserService {
         return userToResponse(userRepository.save(user));
     }
 
-    public Optional<UserResponse> update(Long id, AmountUpdateRequest request) {
+    public UserResponse update(Long id, AmountUpdateRequest request) {
         return userRepository.findById(id)
                 .map(user -> {
                     user.setAmount(request.price());
                     return userToResponse(userRepository.save(user));
-                });
+                })
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     public void deleteById(long id) {
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+        userRepository.delete(user);
     }
 
-    public Optional<BookReadResponse> findReadableBook(Long userId, Long bookId) {
+    public BookReadResponse findReadableBook(Long userId, Long bookId) {
+        bookRepository.findById(bookId)
+                .orElseThrow(() -> new BookNotFoundException(bookId));
+
         return userRepository.findById(userId)
                 .flatMap(user -> getPurchasedBooks(user)
                         .stream()
@@ -91,7 +100,8 @@ public class UserService {
                         book.getAuthor(),
                         book.getGenre(),
                         book.getContent()
-                ));
+                ))
+                .orElseThrow(() -> new UserNotFoundException(userId));
     }
 
     @Transactional

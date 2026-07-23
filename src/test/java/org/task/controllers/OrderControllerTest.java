@@ -68,4 +68,40 @@ class OrderControllerTest {
                                 """))
                 .andExpect(status().isCreated());
     }
+
+    @Test
+    void shouldReturnNotFoundWhenOrderDoesNotExist() throws Exception {
+        mockMvc.perform(get("/orders/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$").value("Order with id 999 does not exist"));
+    }
+
+    @Test
+    void shouldReturnOrderValidationErrors() throws Exception {
+        mockMvc.perform(post("/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "userId": -1,
+                                  "bookId": -2
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.userId[0]").value("User id must be positive"))
+                .andExpect(jsonPath("$.bookId[0]").value("Book id must be positive"));
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenOrderUserDoesNotExist() throws Exception {
+        mockMvc.perform(post("/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "userId": 999,
+                                  "bookId": 1
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$").value("User with id 999 does not exist"));
+    }
 }

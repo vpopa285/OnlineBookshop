@@ -1,8 +1,13 @@
 package org.task.controllers;
 
+import java.util.List;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -23,11 +28,10 @@ import org.task.service.OrderService;
 import org.task.service.ReviewService;
 import org.task.service.UserService;
 
-import java.util.List;
-
 @RestController
 @RequestMapping({"/api/users", "/users"})
 @RequiredArgsConstructor
+@Validated
 public class UserController {
     private final UserService userService;
     private final ReviewService reviewService;
@@ -40,14 +44,14 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUser(
-            @PathVariable Long id
+            @PathVariable @Positive Long id
     ) {
-        return ResponseEntity.of(userService.findResponseById(id));
+        return ResponseEntity.ok(userService.findResponseById(id));
     }
 
     @PostMapping
     public ResponseEntity<UserResponse> createUser(
-            @RequestBody UserRequest userRequest
+            @Valid @RequestBody UserRequest userRequest
     ) {
         UserResponse createdUser = userService.createResponse(userRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
@@ -55,23 +59,23 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
-            @PathVariable Long id,
-            @RequestBody UserRequest userRequest
+            @PathVariable @Positive Long id,
+            @Valid @RequestBody UserRequest userRequest
     ) {
         return ResponseEntity.ok(userService.update(id, userRequest));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(
-            @PathVariable Long id,
-            @RequestBody AmountUpdateRequest request
+            @PathVariable @Positive Long id,
+            @Valid @RequestBody AmountUpdateRequest request
     ) {
-        return ResponseEntity.of(userService.update(id, request));
+        return ResponseEntity.ok(userService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(
-            @PathVariable Long id
+            @PathVariable @Positive Long id
     ) {
         userService.deleteById(id);
         return ResponseEntity.noContent().build();
@@ -79,34 +83,33 @@ public class UserController {
 
     @GetMapping("/{userId}/reviews")
     public ResponseEntity<List<ReviewResponse>> getUserReviews(
-            @PathVariable Long userId
+            @PathVariable @Positive Long userId
     ) {
         return ResponseEntity.ok(reviewService.findResponsesByUserId(userId));
     }
 
     @PostMapping("/{userId}/reviews")
     public ResponseEntity<ReviewResponse> createUserReview(
-            @PathVariable Long userId,
-            @RequestBody UserReviewRequest request
+            @PathVariable @Positive Long userId,
+            @Valid @RequestBody UserReviewRequest request
     ) {
-        return reviewService.createForUser(userId, request)
-                .map(review -> ResponseEntity.status(HttpStatus.CREATED).body(review))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(reviewService.createForUser(userId, request));
     }
 
     @GetMapping("/{userId}/orders")
     public ResponseEntity<List<OrderResponse>> getUserOrders(
-            @PathVariable Long userId
+            @PathVariable @Positive Long userId
     ) {
         return ResponseEntity.ok(orderService.findResponsesByUserId(userId));
     }
 
     @GetMapping("/{userId}/books/{bookId}")
     public ResponseEntity<BookReadResponse> readUserBook(
-            @PathVariable Long userId,
-            @PathVariable Long bookId
+            @PathVariable @Positive Long userId,
+            @PathVariable @Positive Long bookId
     ) {
-        return ResponseEntity.of(userService.findReadableBook(userId, bookId));
+        return ResponseEntity.ok(userService.findReadableBook(userId, bookId));
     }
 
 }

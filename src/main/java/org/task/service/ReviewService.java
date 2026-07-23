@@ -1,20 +1,23 @@
 package org.task.service;
 
+import java.util.List;
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.task.dto.BookReviewRequest;
 import org.task.dto.ReviewResponse;
 import org.task.dto.ReviewUpdateRequest;
 import org.task.dto.UserReviewRequest;
+import org.task.exceptions.BookNotFoundException;
+import org.task.exceptions.ReviewNotFoundException;
+import org.task.exceptions.UserNotFoundException;
 import org.task.model.Book;
 import org.task.model.Review;
 import org.task.model.User;
 import org.task.repositories.BookRepository;
 import org.task.repositories.ReviewRepository;
 import org.task.repositories.UserRepository;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,12 +45,16 @@ public class ReviewService {
                 .toList();
     }
 
-    public Optional<ReviewResponse> findResponseById(Long id) {
+    public ReviewResponse findResponseById(Long id) {
         return reviewRepository.findById(id)
-                .map(this::toResponse);
+                .map(this::toResponse)
+                .orElseThrow(() -> new ReviewNotFoundException(id)
+        );
     }
 
     public List<ReviewResponse> findResponsesByBookId(Long bookId) {
+        bookRepository.findById(bookId).orElseThrow(() -> new BookNotFoundException(bookId));
+
         return reviewRepository.findAllByBookId(bookId)
                 .stream()
                 .map(this::toResponse)
@@ -55,47 +62,47 @@ public class ReviewService {
     }
 
     public List<ReviewResponse> findResponsesByUserId(Long userId) {
+        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+
         return reviewRepository.findAllByUserId(userId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    public Optional<ReviewResponse> createForBook(Long bookId, BookReviewRequest request) {
-        Optional<Book> book = bookRepository.findById(bookId);
-        Optional<User> user = userRepository.findById(request.userId());
-        if (book.isEmpty() || user.isEmpty()) {
-            return Optional.empty();
-        }
+    public ReviewResponse createForBook(Long bookId, BookReviewRequest request) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new BookNotFoundException(bookId));
+        User user = userRepository.findById(request.userId())
+                .orElseThrow(() -> new UserNotFoundException(request.userId()));
 
         Review review = Review.builder()
-                .book(book.get())
-                .user(user.get())
+                .book(book)
+                .user(user)
                 .rate(request.rate())
                 .comment(request.comment())
                 .build();
 
-        return Optional.of(toResponse(reviewRepository.save(review)));
+        return toResponse(reviewRepository.save(review));
     }
 
-    public Optional<ReviewResponse> createForUser(Long userId, UserReviewRequest request) {
-        Optional<User> user = userRepository.findById(userId);
-        Optional<Book> book = bookRepository.findById(request.bookId());
-        if (user.isEmpty() || book.isEmpty()) {
-            return Optional.empty();
-        }
+    public ReviewResponse createForUser(Long userId, UserReviewRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+        Book book = bookRepository.findById(request.bookId())
+                .orElseThrow(() -> new BookNotFoundException(request.bookId()));
 
         Review review = Review.builder()
-                .user(user.get())
-                .book(book.get())
+                .user(user)
+                .book(book)
                 .rate(request.rate())
                 .comment(request.comment())
                 .build();
 
-        return Optional.of(toResponse(reviewRepository.save(review)));
+        return toResponse(reviewRepository.save(review));
     }
 
-    public Optional<ReviewResponse> update(Long id, ReviewUpdateRequest request) {
+    public ReviewResponse update(Long id, ReviewUpdateRequest request) {
         return reviewRepository.findById(id)
                 .map(review -> Review.builder()
                         .id(review.getId())
@@ -105,11 +112,13 @@ public class ReviewService {
                         .comment(request.comment())
                         .build())
                 .map(reviewRepository::save)
-                .map(this::toResponse);
+                .map(this::toResponse)
+                .orElseThrow(() -> new ReviewNotFoundException(id));
     }
 
     public void deleteById(Long id) {
-        reviewRepository.deleteById(id);
+        Review review = reviewRepository.findById(id).orElseThrow(() -> new ReviewNotFoundException(id));
+        reviewRepository.delete(review);
     }
 
     public void deleteByUserAndBookId(long userId, long bookId) {
