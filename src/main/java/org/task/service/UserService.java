@@ -64,8 +64,17 @@ public class UserService {
     }
 
     public UserResponse update(Long id, UserRequest request) {
-        User user = requestToUser(request);
-        user.setId(id);
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+        User user = new User(
+                id,
+                request.username(),
+                request.email(),
+                request.password(),
+                existingUser.getAmount(),
+                existingUser.isRestriction(),
+                existingUser.isAdmin()
+        );
 
         return userToResponse(userRepository.save(user));
     }
