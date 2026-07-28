@@ -5,11 +5,15 @@ import java.util.List;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,13 +21,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.task.dto.AmountUpdateRequest;
-import org.task.dto.BookReadResponse;
-import org.task.dto.OrderResponse;
-import org.task.dto.ReviewResponse;
-import org.task.dto.UserReviewRequest;
-import org.task.dto.UserRequest;
-import org.task.dto.UserResponse;
+import org.task.dto.PageResponse;
+import org.task.dto.filter.UserFilter;
+import org.task.dto.request.AmountUpdateRequest;
+import org.task.dto.request.UserRequest;
+import org.task.dto.request.UserReviewRequest;
+import org.task.dto.response.BookReadResponse;
+import org.task.dto.response.OrderResponse;
+import org.task.dto.response.ReviewResponse;
+import org.task.dto.response.UserResponse;
 import org.task.service.OrderService;
 import org.task.service.ReviewService;
 import org.task.service.UserService;
@@ -38,8 +44,15 @@ public class UserController {
     private final OrderService orderService;
 
     @GetMapping
-    public ResponseEntity<List<UserResponse>> getUsers() {
-        return ResponseEntity.ok(userService.findAllResponses());
+    public ResponseEntity<PageResponse<UserResponse>> getUsers(
+            @ModelAttribute UserFilter filter,
+            @PageableDefault(
+                    size = 20,
+                    sort = "username"
+            )
+            Pageable pageable
+            ) {
+        return ResponseEntity.ok(userService.findAllResponses(filter, pageable));
     }
 
     @GetMapping("/{id}")

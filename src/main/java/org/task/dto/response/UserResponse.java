@@ -1,4 +1,4 @@
-package org.task.dto;
+package org.task.dto.response;
 
 public record UserResponse(
         String username,

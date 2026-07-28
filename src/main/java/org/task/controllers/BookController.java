@@ -5,11 +5,14 @@ import java.util.List;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,11 +20,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.task.dto.BookRequest;
-import org.task.dto.BookResponse;
-import org.task.dto.BookReviewRequest;
-import org.task.dto.PriceUpdateRequest;
-import org.task.dto.ReviewResponse;
+import org.task.dto.PageResponse;
+import org.task.dto.filter.BookFilter;
+import org.task.dto.request.BookRequest;
+import org.task.dto.request.BookReviewRequest;
+import org.task.dto.request.PriceUpdateRequest;
+import org.task.dto.response.BookResponse;
+import org.task.dto.response.ReviewResponse;
 import org.task.service.BookService;
 import org.task.service.ReviewService;
 
@@ -34,8 +39,15 @@ public class BookController {
     private final ReviewService reviewService;
 
     @GetMapping
-    public ResponseEntity<List<BookResponse>> getBooks() {
-        return ResponseEntity.ok(bookService.findAllResponses());
+    public ResponseEntity<PageResponse<BookResponse>> getBooks(
+            @ModelAttribute BookFilter filter,
+            @PageableDefault(
+                    size = 20,
+                    sort = "title"
+            )
+            Pageable pageable
+            ) {
+        return ResponseEntity.ok(bookService.findAllResponses(filter, pageable));
     }
 
     @GetMapping("/{id}")

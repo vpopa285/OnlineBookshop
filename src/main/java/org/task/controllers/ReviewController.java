@@ -5,17 +5,22 @@ import java.util.List;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.task.dto.ReviewResponse;
-import org.task.dto.ReviewUpdateRequest;
+import org.task.dto.PageResponse;
+import org.task.dto.filter.ReviewFilter;
+import org.task.dto.request.ReviewUpdateRequest;
+import org.task.dto.response.ReviewResponse;
 import org.task.service.ReviewService;
 
 @RequiredArgsConstructor
@@ -26,8 +31,11 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @GetMapping
-    public ResponseEntity<List<ReviewResponse>> getReviews() {
-        return ResponseEntity.ok(reviewService.findAllResponses());
+    public ResponseEntity<PageResponse<ReviewResponse>> getReviews(
+            @ModelAttribute ReviewFilter filter,
+            @PageableDefault(size = 20) Pageable pageable
+            ) {
+        return ResponseEntity.ok(reviewService.findAllResponses(filter, pageable));
     }
 
     @GetMapping("/{reviewId}")

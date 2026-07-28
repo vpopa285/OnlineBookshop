@@ -4,11 +4,17 @@ import java.util.List;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.task.dto.BookReviewRequest;
-import org.task.dto.ReviewResponse;
-import org.task.dto.ReviewUpdateRequest;
-import org.task.dto.UserReviewRequest;
+import org.task.dto.PageResponse;
+import org.task.dto.filter.ReviewFilter;
+import org.task.dto.request.BookReviewRequest;
+import org.task.dto.request.ReviewUpdateRequest;
+import org.task.dto.request.UserReviewRequest;
+import org.task.dto.response.ReviewResponse;
+import org.task.dto.specification.ReviewSpecification;
 import org.task.exceptions.BookNotFoundException;
 import org.task.exceptions.ReviewNotFoundException;
 import org.task.exceptions.UserNotFoundException;
@@ -38,11 +44,13 @@ public class ReviewService {
         return reviewRepository.findAllByBookId(bookId);
     }
 
-    public List<ReviewResponse> findAllResponses() {
-        return reviewRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<ReviewResponse> findAllResponses(ReviewFilter filter, Pageable pageable) {
+        Specification<Review> specification = ReviewSpecification.getSpecification(filter);
+
+        Page<ReviewResponse> page = reviewRepository.findAll(specification, pageable)
+                .map(this::toResponse);
+
+        return PageResponse.from(page);
     }
 
     public ReviewResponse findResponseById(Long id) {

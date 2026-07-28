@@ -4,11 +4,17 @@ import java.util.List;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.task.SearchType;
-import org.task.dto.BookRequest;
-import org.task.dto.BookResponse;
-import org.task.dto.PriceUpdateRequest;
+import org.task.dto.PageResponse;
+import org.task.dto.filter.BookFilter;
+import org.task.dto.request.BookRequest;
+import org.task.dto.request.PriceUpdateRequest;
+import org.task.dto.response.BookResponse;
+import org.task.dto.specification.BookSpecification;
 import org.task.exceptions.BookNotFoundException;
 import org.task.model.Book;
 import org.task.repositories.BookRepository;
@@ -34,11 +40,13 @@ public class BookService {
         return bookToResponse(getBookOrThrow(id));
     }
 
-    public List<BookResponse> findAllResponses() {
-        return bookRepository.findAll()
-                .stream()
-                .map(this::bookToResponse)
-                .toList();
+    public PageResponse<BookResponse> findAllResponses(BookFilter filter, Pageable pageable) {
+        Specification<Book> specification = BookSpecification.withFilter(filter);
+
+        Page<BookResponse> page = bookRepository.findAll(specification, pageable)
+                .map(BookService::bookToResponse);
+
+        return PageResponse.from(page);
     }
 
     public List<Book> findAll() {
@@ -105,7 +113,7 @@ public class BookService {
                 .build();
     }
 
-    private BookResponse bookToResponse(Book book) {
+    public static BookResponse bookToResponse(Book book) {
         return new BookResponse(
                 book.getId(),
                 book.getTitle(),
