@@ -1,4 +1,4 @@
-package org.task.dto;
+package org.task.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

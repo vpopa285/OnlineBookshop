@@ -11,11 +11,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.task.BookshopApplication;
-import org.task.service.UserService;
 
-import static org.assertj.core.api.BDDAssumptions.given;
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -32,8 +29,6 @@ class BookControllerTest {
     WebApplicationContext context;
 
     MockMvc mockMvc;
-    @Autowired
-    private UserService userService;
 
     @BeforeEach
     void setUp() {
@@ -44,7 +39,7 @@ class BookControllerTest {
     void shouldRunBookCrudHappyPaths() throws Exception {
         mockMvc.perform(get("/books"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)));
+                .andExpect(jsonPath("$.content", hasSize(3)));
 
         mockMvc.perform(get("/books/1"))
                 .andExpect(status().isOk())
@@ -118,6 +113,43 @@ class BookControllerTest {
     }
 
     @Test
+    void shouldFilterBooksBySearchParameters() throws Exception {
+        mockMvc.perform(get("/books")
+                        .param("title", "code")
+                        .param("author", "martin")
+                        .param("genres", "Programming")
+                        .param("priceMin", "25")
+                        .param("priceMax", "35"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].title").value("Clean Code"));
+    }
+
+    @Test
+    void shouldFilterBooksByMultipleExactGenres() throws Exception {
+        mockMvc.perform(get("/books")
+                        .param("genres", "Classic", "Programming")
+                        .param("sort", "title,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].title").value("Clean Code"))
+                .andExpect(jsonPath("$.content[1].title").value("The Great Gatsby"));
+    }
+
+    @Test
+    void shouldSortBooksByAtLeastTwoFields() throws Exception {
+        mockMvc.perform(get("/books").param("sort", "price,desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("Clean Code"))
+                .andExpect(jsonPath("$.sort[0]").value("price,desc"));
+
+        mockMvc.perform(get("/books").param("sort", "author,desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].author").value("Robert C. Martin"))
+                .andExpect(jsonPath("$.sort[0]").value("author,desc"));
+    }
+
+    @Test
     void shouldReturnNotFoundWhenBookDoesNotExist() throws Exception {
         mockMvc.perform(get("/books/999"))
                 .andExpect(status().isNotFound())
@@ -136,13 +168,13 @@ class BookControllerTest {
                                   "content": "",
                                   "price": -1
                                 }
-                                """))
+                """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.title[0]").value("Title is required"))
-                .andExpect(jsonPath("$.author[0]").value("Author is required"))
-                .andExpect(jsonPath("$.genre[0]").value("Genre is required"))
-                .andExpect(jsonPath("$.content[0]").value("Content is required"))
-                .andExpect(jsonPath("$.price[0]").value("Price must be positive"));
+                .andExpect(jsonPath("$.title").value("Title is required"))
+                .andExpect(jsonPath("$.author").value("Author is required"))
+                .andExpect(jsonPath("$.genre").value("Genre is required"))
+                .andExpect(jsonPath("$.content").value("Content is required"))
+                .andExpect(jsonPath("$.price").value("Price must be positive"));
     }
 
     @Test
@@ -155,10 +187,10 @@ class BookControllerTest {
                                   "rate": 6,
                                   "comment": ""
                                 }
-                                """))
+                """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.userId[0]").value("User id must be positive"))
-                .andExpect(jsonPath("$.rate[0]").value("Rate must be at most 5"))
-                .andExpect(jsonPath("$.comment[0]").value("Comment is required"));
+                .andExpect(jsonPath("$.userId").value("User id must be positive"))
+                .andExpect(jsonPath("$.rate").value("Rate must be at most 5"))
+                .andExpect(jsonPath("$.comment").value("Comment is required"));
     }
 }

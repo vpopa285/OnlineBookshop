@@ -39,7 +39,7 @@ class UserControllerTest {
     void shouldRunUserCrudHappyPaths() throws Exception {
         mockMvc.perform(get("/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)));
+                .andExpect(jsonPath("$.content", hasSize(3)));
 
         mockMvc.perform(get("/users/1"))
                 .andExpect(status().isOk())
@@ -107,8 +107,8 @@ class UserControllerTest {
                                 }
                                 """))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.userId").value(1))
-                .andExpect(jsonPath("$.bookIds[0]").value(1));
+                .andExpect(jsonPath("$.user.username").value("alice_reads"))
+                .andExpect(jsonPath("$.books[0].id").value(1));
 
         mockMvc.perform(get("/users/1/orders"))
                 .andExpect(status().isOk())
@@ -124,6 +124,21 @@ class UserControllerTest {
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("alice_reads"));
+    }
+
+    @Test
+    void shouldFilterAndSortUsers() throws Exception {
+        mockMvc.perform(get("/users")
+                        .param("username", "alice")
+                        .param("email", "example.com"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].username").value("alice_reads"));
+
+        mockMvc.perform(get("/users").param("sort", "email,desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].email").value("restricted@example.com"))
+                .andExpect(jsonPath("$.sort[0]").value("email,desc"));
     }
 
     @Test
@@ -158,11 +173,11 @@ class UserControllerTest {
                                   "email": "wrong-email",
                                   "password": "short"
                                 }
-                                """))
+                """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.username[0]").value("Incorrect name"))
-                .andExpect(jsonPath("$.email[0]").value("Incorrect email"))
-                .andExpect(jsonPath("$.password[0]").value(
+                .andExpect(jsonPath("$.username").value("Incorrect name"))
+                .andExpect(jsonPath("$.email").value("Incorrect email"))
+                .andExpect(jsonPath("$.password").value(
                         "Password must contain at least 8 characters"));
     }
 
@@ -170,6 +185,6 @@ class UserControllerTest {
     void shouldReturnPathVariableValidationErrors() throws Exception {
         mockMvc.perform(get("/users/-1"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.id", hasSize(1)));
+                .andExpect(jsonPath("$").value("getUser.id: must be greater than 0"));
     }
 }

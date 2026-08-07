@@ -37,7 +37,7 @@ class ReviewControllerTest {
     void shouldRunReviewCrudHappyPaths() throws Exception {
         mockMvc.perform(get("/reviews"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)));
+                .andExpect(jsonPath("$.content", hasSize(3)));
 
         mockMvc.perform(get("/reviews/1"))
                 .andExpect(status().isOk())
@@ -67,6 +67,29 @@ class ReviewControllerTest {
     }
 
     @Test
+    void shouldFilterReviewsByRateParameters() throws Exception {
+        mockMvc.perform(get("/reviews").param("exactRate", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].rate").value(5));
+
+        mockMvc.perform(get("/reviews")
+                        .param("minRate", "4")
+                        .param("maxRate", "4"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].rate").value(4));
+    }
+
+    @Test
+    void shouldSortReviewsByRate() throws Exception {
+        mockMvc.perform(get("/reviews").param("sort", "rate,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].rate").value(4))
+                .andExpect(jsonPath("$.sort[0]").value("rate,asc"));
+    }
+
+    @Test
     void shouldReturnNotFoundWhenReviewDoesNotExist() throws Exception {
         mockMvc.perform(get("/reviews/999"))
                 .andExpect(status().isNotFound())
@@ -82,16 +105,16 @@ class ReviewControllerTest {
                                   "rate": 6,
                                   "comment": ""
                                 }
-                                """))
+                """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.rate[0]").value("Rate must be at most 5"))
-                .andExpect(jsonPath("$.comment[0]").value("Comment is required"));
+                .andExpect(jsonPath("$.rate").value("Rate must be at most 5"))
+                .andExpect(jsonPath("$.comment").value("Comment is required"));
     }
 
     @Test
     void shouldReturnPathVariableValidationErrors() throws Exception {
         mockMvc.perform(get("/reviews/-1"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.reviewId", hasSize(1)));
+                .andExpect(jsonPath("$").value("getReview.reviewId: must be greater than 0"));
     }
 }

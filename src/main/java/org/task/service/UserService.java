@@ -6,16 +6,30 @@ import java.util.Optional;
 import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.task.dto.AmountUpdateRequest;
-import org.task.dto.BookReadResponse;
-import org.task.dto.UserRequest;
-import org.task.dto.UserResponse;
+import org.task.dto.PageResponse;
+import org.task.dto.filter.UserFilter;
+import org.task.dto.request.AmountUpdateRequest;
+import org.task.dto.request.UserRequest;
+import org.task.dto.response.BookReadResponse;
+import org.task.dto.response.UserResponse;
+import org.task.dto.specification.UserSpecification;
 import org.task.exceptions.BookNotFoundException;
 import org.task.exceptions.UserNotFoundException;
-import org.task.model.*;
-import org.task.repositories.*;
+import org.task.model.Book;
+import org.task.model.Order;
+import org.task.model.OrderItem;
+import org.task.model.Review;
+import org.task.model.User;
+import org.task.repositories.BookRepository;
+import org.task.repositories.OrderItemRepository;
+import org.task.repositories.OrderRepository;
+import org.task.repositories.ReviewRepository;
+import org.task.repositories.UserRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +54,7 @@ public class UserService {
 
     public UserResponse findResponseById(Long id) {
         return userRepository.findById(id)
-                .map(this::userToResponse)
+                .map(UserService::userToResponse)
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 
@@ -48,11 +62,13 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public List<UserResponse> findAllResponses() {
-        return userRepository.findAll()
-                .stream()
-                .map(this::userToResponse)
-                .toList();
+    public PageResponse<UserResponse> findAllResponses(UserFilter filter, Pageable pageable) {
+        Specification<User> specification = UserSpecification.withFilter(filter);
+
+        Page<UserResponse> page = userRepository.findAll(specification, pageable)
+                .map(UserService::userToResponse);
+
+        return PageResponse.from(page);
     }
 
     public Optional<User> findByUsername(String username) {
@@ -205,7 +221,7 @@ public class UserService {
                 .build();
     }
 
-    private UserResponse userToResponse(User user) {
+    public static UserResponse userToResponse(User user) {
         return new UserResponse(
                 user.getUsername(),
                 user.getEmail(),

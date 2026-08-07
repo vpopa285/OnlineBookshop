@@ -3,9 +3,16 @@ package org.task.service;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.task.dto.OrderRequest;
-import org.task.dto.OrderResponse;
+import org.task.dto.PageResponse;
+import org.task.dto.filter.OrderFilter;
+import org.task.dto.request.OrderRequest;
+import org.task.dto.response.BookResponse;
+import org.task.dto.response.OrderResponse;
+import org.task.dto.specification.OrderSpecification;
 import org.task.exceptions.BookNotFoundException;
 import org.task.exceptions.OrderNotFoundException;
 import org.task.exceptions.UserNotFoundException;
@@ -26,11 +33,13 @@ public class OrderService {
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
 
-    public List<OrderResponse> findAllResponses() {
-        return orderRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<OrderResponse> findAllResponses(OrderFilter filter, Pageable pageable) {
+        Specification<Order> specification = OrderSpecification.getSpecification(filter);
+
+        Page<OrderResponse> page = orderRepository.findAll(specification, pageable)
+                .map(this::toResponse);
+
+        return PageResponse.from(page);
     }
 
     public OrderResponse findResponseById(Long id) {
@@ -62,15 +71,16 @@ public class OrderService {
     }
 
     private OrderResponse toResponse(Order order) {
-        List<Long> bookIds = orderItemRepository.findAllByOrder(order)
+        List<BookResponse> books = orderItemRepository.findAllByOrder(order)
                 .stream()
-                .map(orderItem -> orderItem.getBook().getId())
+                .map(orderItem -> BookService.bookToResponse(orderItem.getBook()))
                 .toList();
 
         return new OrderResponse(
                 order.getId(),
-                order.getUser().getId(),
-                bookIds
+                UserService.userToResponse(order.getUser()),
+                books,
+                order.getCreatedAt()
         );
     }
 }
