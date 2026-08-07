@@ -6,15 +6,23 @@ info:
 paths:
   /books:
     get:
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/BookTitle'
+        - $ref: '#/components/parameters/BookAuthor'
+        - $ref: '#/components/parameters/BookGenres'
+        - $ref: '#/components/parameters/BookPriceMin'
+        - $ref: '#/components/parameters/BookPriceMax'
+        - $ref: '#/components/parameters/BookPriceEqual'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Book'
+                $ref: '#/components/schemas/BookPage'
     post:
       requestBody:
         required: true
@@ -32,10 +40,10 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /books/{bookId}:
+  /books/{id}:
     get:
       parameters:
-        - $ref: '#/components/parameters/BookId'
+        - $ref: '#/components/parameters/Id'
       responses:
         '200':
           description: OK
@@ -47,7 +55,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       parameters:
-        - $ref: '#/components/parameters/BookId'
+        - $ref: '#/components/parameters/Id'
       requestBody:
         required: true
         content:
@@ -67,13 +75,13 @@ paths:
           $ref: '#/components/responses/NotFound'
     patch:
       parameters:
-        - $ref: '#/components/parameters/BookId'
+        - $ref: '#/components/parameters/Id'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BookPriceRequest'
+              $ref: '#/components/schemas/PriceUpdateRequest'
       responses:
         '200':
           description: OK
@@ -87,7 +95,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       parameters:
-        - $ref: '#/components/parameters/BookId'
+        - $ref: '#/components/parameters/Id'
       responses:
         '204':
           description: No Content
@@ -132,15 +140,19 @@ paths:
 
   /users:
     get:
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/UserUsername'
+        - $ref: '#/components/parameters/UserEmail'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserResponse'
+                $ref: '#/components/schemas/UserPage'
     post:
       requestBody:
         required: true
@@ -158,10 +170,10 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /users/{userId}:
+  /users/{id}:
     get:
       parameters:
-        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/Id'
       responses:
         '200':
           description: OK
@@ -173,7 +185,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       parameters:
-        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/Id'
       requestBody:
         required: true
         content:
@@ -191,9 +203,29 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+    patch:
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AmountUpdateRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
     delete:
       parameters:
-        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/Id'
       responses:
         '204':
           description: No Content
@@ -269,15 +301,20 @@ paths:
 
   /reviews:
     get:
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/ReviewMinRate'
+        - $ref: '#/components/parameters/ReviewMaxRate'
+        - $ref: '#/components/parameters/ReviewExactRate'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Review'
+                $ref: '#/components/schemas/ReviewPage'
 
   /reviews/{reviewId}:
     get:
@@ -323,15 +360,21 @@ paths:
 
   /orders:
     get:
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/OrderUsername'
+        - $ref: '#/components/parameters/OrderMinDate'
+        - $ref: '#/components/parameters/OrderMaxDate'
+        - $ref: '#/components/parameters/OrderExactDate'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Order'
+                $ref: '#/components/schemas/OrderPage'
     post:
       requestBody:
         required: true
@@ -367,6 +410,38 @@ paths:
 
 components:
   parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    Size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 20
+    Sort:
+      name: sort
+      in: query
+      description: Repeatable Spring sort value, for example title,asc or price,desc.
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
     BookId:
       name: bookId
       in: path
@@ -399,22 +474,184 @@ components:
         type: integer
         format: int64
         minimum: 1
+    BookTitle:
+      name: title
+      in: query
+      schema:
+        type: string
+    BookAuthor:
+      name: author
+      in: query
+      schema:
+        type: string
+    BookGenres:
+      name: genres
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+    BookPriceMin:
+      name: priceMin
+      in: query
+      schema:
+        type: number
+        format: double
+    BookPriceMax:
+      name: priceMax
+      in: query
+      schema:
+        type: number
+        format: double
+    BookPriceEqual:
+      name: priceEqual
+      in: query
+      schema:
+        type: number
+        format: double
+    UserUsername:
+      name: username
+      in: query
+      schema:
+        type: string
+    UserEmail:
+      name: email
+      in: query
+      schema:
+        type: string
+    ReviewMinRate:
+      name: minRate
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 5
+    ReviewMaxRate:
+      name: maxRate
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 5
+    ReviewExactRate:
+      name: exactRate
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 5
+    OrderUsername:
+      name: username
+      in: query
+      schema:
+        type: string
+    OrderMinDate:
+      name: minDate
+      in: query
+      schema:
+        type: string
+        format: date-time
+    OrderMaxDate:
+      name: maxDate
+      in: query
+      schema:
+        type: string
+        format: date-time
+    OrderExactDate:
+      name: exactDate
+      in: query
+      schema:
+        type: string
+        format: date-time
 
   responses:
     BadRequest:
       description: Bad Request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
     NotFound:
       description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
 
   schemas:
+    PageMetadata:
+      type: object
+      required:
+        - currentPage
+        - pageSize
+        - numberOfElements
+        - totalElements
+        - totalPages
+        - first
+        - last
+        - sort
+      properties:
+        currentPage:
+          type: integer
+        pageSize:
+          type: integer
+        numberOfElements:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        maxPageNumber:
+          type:
+            - integer
+            - 'null'
+        first:
+          type: boolean
+        last:
+          type: boolean
+        sort:
+          type: array
+          items:
+            type: string
+    BookPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required:
+            - content
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/Book'
+    UserPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required:
+            - content
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserResponse'
+    ReviewPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required:
+            - content
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/Review'
+    OrderPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          required:
+            - content
+          properties:
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/Order'
     Book:
       type: object
       required:
@@ -439,14 +676,13 @@ components:
         price:
           type: number
           format: double
-          minimum: 0
-
     BookRequest:
       type: object
       required:
         - title
         - author
         - genre
+        - content
         - price
       properties:
         title:
@@ -455,11 +691,11 @@ components:
           type: string
         genre:
           type: string
+        content:
+          type: string
         price:
           type: number
           format: double
-          minimum: 0
-
     BookReadResponse:
       type: object
       required:
@@ -473,8 +709,7 @@ components:
           type: string
         content:
           type: string
-
-    BookPriceRequest:
+    PriceUpdateRequest:
       type: object
       required:
         - price
@@ -482,39 +717,34 @@ components:
         price:
           type: number
           format: double
-          minimum: 0
-
+    AmountUpdateRequest:
+      type: object
+      required:
+        - price
+      properties:
+        price:
+          type: number
+          format: double
     UserResponse:
       type: object
       required:
-        - id
         - username
         - email
-        - amount
         - restriction
       properties:
-        id:
-          type: integer
-          format: int64
         username:
           type: string
         email:
           type: string
           format: email
-        amount:
-          type: number
-          format: double
         restriction:
           type: boolean
-
     UserRequest:
       type: object
       required:
         - username
         - email
         - password
-        - amount
-        - restriction
       properties:
         username:
           type: string
@@ -523,19 +753,13 @@ components:
           format: email
         password:
           type: string
-        amount:
-          type: number
-          format: double
-        restriction:
-          type: boolean
-
     Review:
       type: object
       required:
         - id
         - userId
         - bookId
-        - rating
+        - rate
         - comment
       properties:
         id:
@@ -547,122 +771,85 @@ components:
         bookId:
           type: integer
           format: int64
-        rating:
+        rate:
           type: integer
           minimum: 1
           maximum: 5
         comment:
           type: string
-
     ReviewUpdateRequest:
       type: object
       required:
-        - rating
+        - rate
         - comment
       properties:
-        rating:
+        rate:
           type: integer
           minimum: 1
           maximum: 5
         comment:
           type: string
-
     BookReviewRequest:
       type: object
       required:
         - userId
-        - rating
+        - rate
         - comment
       properties:
         userId:
           type: integer
           format: int64
-        rating:
+        rate:
           type: integer
           minimum: 1
           maximum: 5
         comment:
           type: string
-
     UserReviewRequest:
       type: object
       required:
         - bookId
-        - rating
+        - rate
         - comment
       properties:
         bookId:
           type: integer
           format: int64
-        rating:
+        rate:
           type: integer
           minimum: 1
           maximum: 5
         comment:
           type: string
-
     Order:
       type: object
       required:
         - id
-        - userId
-        - status
-        - items
+        - user
+        - books
+        - createdAt
       properties:
         id:
           type: integer
           format: int64
-        userId:
-          type: integer
-          format: int64
-        status:
-          type: string
-        items:
+        user:
+          $ref: '#/components/schemas/UserResponse'
+        books:
           type: array
           items:
-            $ref: '#/components/schemas/OrderItem'
-
-    OrderItem:
+            $ref: '#/components/schemas/Book'
+        createdAt:
+          type: string
+          format: date-time
+    OrderRequest:
       type: object
       required:
-        - id
+        - userId
         - bookId
-        - quantity
-        - priceAtPurchase
       properties:
-        id:
+        userId:
           type: integer
           format: int64
         bookId:
           type: integer
           format: int64
-        quantity:
-          type: integer
-          minimum: 1
-        priceAtPurchase:
-          type: number
-          format: double
-          minimum: 0
-
-    OrderRequest:
-      type: object
-      required:
-        - userId
-        - bookIds
-      properties:
-        userId:
-          type: integer
-          format: int64
-        bookIds:
-          type: array
-          items:
-            type: integer
-            format: int64
-
-    ErrorResponse:
-      type: object
-      required:
-        - message
-      properties:
-        message:
-          type: string
