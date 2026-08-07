@@ -1,8 +1,13 @@
 package org.task.controllers;
 
+import java.util.List;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -20,11 +25,10 @@ import org.task.dto.ReviewResponse;
 import org.task.service.BookService;
 import org.task.service.ReviewService;
 
-import java.util.List;
-
 @RequiredArgsConstructor
 @RestController
 @RequestMapping({"/api/books", "/books"})
+@Validated
 public class BookController {
     private final BookService bookService;
     private final ReviewService reviewService;
@@ -36,14 +40,14 @@ public class BookController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BookResponse> getBook(
-            @PathVariable Long id
+            @PathVariable @Positive Long id
     ) {
-        return ResponseEntity.of(bookService.findResponseById(id));
+        return ResponseEntity.ok(bookService.findResponseById(id));
     }
 
     @PostMapping
     public ResponseEntity<BookResponse> createBook(
-            @RequestBody BookRequest bookRequest
+            @Valid @RequestBody BookRequest bookRequest
     ) {
         BookResponse createdBook = bookService.createResponse(bookRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdBook);
@@ -51,23 +55,23 @@ public class BookController {
 
     @PutMapping("/{id}")
     public ResponseEntity<BookResponse> updateBook(
-            @PathVariable Long id,
-            @RequestBody BookRequest bookRequest
+            @PathVariable @Positive Long id,
+            @Valid @RequestBody BookRequest bookRequest
     ) {
         return ResponseEntity.ok(bookService.update(id, bookRequest));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<BookResponse> updateBook(
-            @PathVariable Long id,
-            @RequestBody PriceUpdateRequest request
+            @PathVariable @Positive Long id,
+            @Valid @RequestBody PriceUpdateRequest request
     ) {
-        return ResponseEntity.of(bookService.update(id, request));
+        return ResponseEntity.ok(bookService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBook(
-            @PathVariable Long id
+            @PathVariable @Positive Long id
     ) {
         bookService.deleteById(id);
         return ResponseEntity.noContent().build();
@@ -75,19 +79,18 @@ public class BookController {
 
     @GetMapping("/{bookId}/reviews")
     public ResponseEntity<List<ReviewResponse>> getBookReviews(
-            @PathVariable Long bookId
+            @PathVariable @Positive Long bookId
     ) {
         return ResponseEntity.ok(reviewService.findResponsesByBookId(bookId));
     }
 
     @PostMapping("/{bookId}/reviews")
     public ResponseEntity<ReviewResponse> createBookReview(
-            @PathVariable Long bookId,
-            @RequestBody BookReviewRequest request
+            @PathVariable @Positive Long bookId,
+            @Valid @RequestBody BookReviewRequest request
     ) {
-        return reviewService.createForBook(bookId, request)
-                .map(review -> ResponseEntity.status(HttpStatus.CREATED).body(review))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(reviewService.createForBook(bookId, request));
     }
 
 }

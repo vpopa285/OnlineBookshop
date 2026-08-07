@@ -65,4 +65,33 @@ class ReviewControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.bookId").value(1));
     }
+
+    @Test
+    void shouldReturnNotFoundWhenReviewDoesNotExist() throws Exception {
+        mockMvc.perform(get("/reviews/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$").value("Review with id 999 does not exist"));
+    }
+
+    @Test
+    void shouldReturnReviewValidationErrors() throws Exception {
+        mockMvc.perform(patch("/reviews/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "rate": 6,
+                                  "comment": ""
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.rate[0]").value("Rate must be at most 5"))
+                .andExpect(jsonPath("$.comment[0]").value("Comment is required"));
+    }
+
+    @Test
+    void shouldReturnPathVariableValidationErrors() throws Exception {
+        mockMvc.perform(get("/reviews/-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.reviewId", hasSize(1)));
+    }
 }

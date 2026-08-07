@@ -1,9 +1,14 @@
 package org.task.service;
 
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.task.dto.OrderRequest;
 import org.task.dto.OrderResponse;
+import org.task.exceptions.BookNotFoundException;
+import org.task.exceptions.OrderNotFoundException;
+import org.task.exceptions.UserNotFoundException;
 import org.task.model.Book;
 import org.task.model.Order;
 import org.task.model.OrderItem;
@@ -12,9 +17,6 @@ import org.task.repositories.BookRepository;
 import org.task.repositories.OrderItemRepository;
 import org.task.repositories.OrderRepository;
 import org.task.repositories.UserRepository;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,29 +33,32 @@ public class OrderService {
                 .toList();
     }
 
-    public Optional<OrderResponse> findResponseById(Long id) {
+    public OrderResponse findResponseById(Long id) {
         return orderRepository.findById(id)
-                .map(this::toResponse);
+                .map(this::toResponse)
+                .orElseThrow(() -> new OrderNotFoundException(id)
+        );
     }
 
     public List<OrderResponse> findResponsesByUserId(Long userId) {
+        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+
         return orderRepository.findAllByUserId(userId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
-    public Optional<OrderResponse> create(OrderRequest request) {
-        Optional<User> user = userRepository.findById(request.userId());
-        Optional<Book> book = bookRepository.findById(request.bookId());
-        if (user.isEmpty() || book.isEmpty()) {
-            return Optional.empty();
-        }
+    public OrderResponse create(OrderRequest request) {
+        User user = userRepository.findById(request.userId())
+                .orElseThrow(() -> new UserNotFoundException(request.userId()));
+        Book book = bookRepository.findById(request.bookId())
+                .orElseThrow(() -> new BookNotFoundException(request.bookId()));
 
-        Order order = orderRepository.save(new Order(user.get()));
-        orderItemRepository.save(new OrderItem(order, book.get()));
+        Order order = orderRepository.save(new Order(user));
+        orderItemRepository.save(new OrderItem(order, book));
 
-        return Optional.of(toResponse(order));
+        return toResponse(order);
     }
 
     private OrderResponse toResponse(Order order) {

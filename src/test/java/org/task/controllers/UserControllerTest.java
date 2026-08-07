@@ -51,7 +51,7 @@ class UserControllerTest {
                                 {
                                   "username": "new_reader",
                                   "email": "new_reader@example.com",
-                                  "password": "pw"
+                                  "password": "password123"
                                 }
                                 """))
                 .andExpect(status().isCreated())
@@ -63,7 +63,7 @@ class UserControllerTest {
                                 {
                                   "username": "updated_reader",
                                   "email": "updated_reader@example.com",
-                                  "password": "new_pw"
+                                  "password": "new_password"
                                 }
                                 """))
                 .andExpect(status().isOk())
@@ -124,5 +124,52 @@ class UserControllerTest {
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("alice_reads"));
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenUserDoesNotExist() throws Exception {
+        mockMvc.perform(get("/users/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$").value("User with id 999 does not exist"));
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenUpdatingMissingUser() throws Exception {
+        mockMvc.perform(put("/users/999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "missing_reader",
+                                  "email": "missing_reader@example.com",
+                                  "password": "password123"
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$").value("User with id 999 does not exist"));
+    }
+
+    @Test
+    void shouldReturnAllUserValidationErrors() throws Exception {
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "",
+                                  "email": "wrong-email",
+                                  "password": "short"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.username[0]").value("Incorrect name"))
+                .andExpect(jsonPath("$.email[0]").value("Incorrect email"))
+                .andExpect(jsonPath("$.password[0]").value(
+                        "Password must contain at least 8 characters"));
+    }
+
+    @Test
+    void shouldReturnPathVariableValidationErrors() throws Exception {
+        mockMvc.perform(get("/users/-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.id", hasSize(1)));
     }
 }

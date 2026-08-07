@@ -1,8 +1,13 @@
 package org.task.controllers;
 
+import java.util.List;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,11 +18,10 @@ import org.task.dto.OrderRequest;
 import org.task.dto.OrderResponse;
 import org.task.service.OrderService;
 
-import java.util.List;
-
 @RequiredArgsConstructor
 @RestController
 @RequestMapping({"/api/orders", "/orders"})
+@Validated
 public class OrderController {
     private final OrderService orderService;
 
@@ -28,17 +32,15 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<OrderResponse> createOrder(
-            @RequestBody OrderRequest request
+            @Valid @RequestBody OrderRequest request
     ) {
-        return orderService.create(request)
-                .map(order -> ResponseEntity.status(HttpStatus.CREATED).body(order))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.create(request));
     }
 
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderResponse> getOrder(
-            @PathVariable Long orderId
+            @PathVariable @Positive Long orderId
     ) {
-        return ResponseEntity.of(orderService.findResponseById(orderId));
+        return ResponseEntity.ok(orderService.findResponseById(orderId));
     }
 }

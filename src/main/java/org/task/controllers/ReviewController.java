@@ -1,7 +1,12 @@
 package org.task.controllers;
 
+import java.util.List;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -13,11 +18,10 @@ import org.task.dto.ReviewResponse;
 import org.task.dto.ReviewUpdateRequest;
 import org.task.service.ReviewService;
 
-import java.util.List;
-
 @RequiredArgsConstructor
 @RestController
 @RequestMapping({"/api/reviews", "/reviews"})
+@Validated
 public class ReviewController {
     private final ReviewService reviewService;
 
@@ -28,22 +32,22 @@ public class ReviewController {
 
     @GetMapping("/{reviewId}")
     public ResponseEntity<ReviewResponse> getReview(
-            @PathVariable Long reviewId
+            @PathVariable @Positive Long reviewId
     ) {
-        return ResponseEntity.of(reviewService.findResponseById(reviewId));
+        return ResponseEntity.ok(reviewService.findResponseById(reviewId));
     }
 
     @PatchMapping("/{reviewId}")
     public ResponseEntity<ReviewResponse> updateReview(
-            @PathVariable Long reviewId,
-            @RequestBody ReviewUpdateRequest request
+            @PathVariable @Positive Long reviewId,
+            @Valid @RequestBody ReviewUpdateRequest request
     ) {
-        return ResponseEntity.of(reviewService.update(reviewId, request));
+        return ResponseEntity.ok(reviewService.update(reviewId, request));
     }
 
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<Void> deleteReview(
-            @PathVariable Long reviewId
+            @PathVariable @Positive Long reviewId
     ) {
         reviewService.deleteById(reviewId);
         return ResponseEntity.noContent().build();
