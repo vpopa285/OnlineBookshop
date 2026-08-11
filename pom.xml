@@ -5,10 +5,14 @@
   <groupId>org.task</groupId>
   <artifactId>Library</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
 
   <name>Library</name>
   <url>https://maven.apache.org</url>
+  <modules>
+    <module>book-service</module>
+    <module>user-service</module>
+  </modules>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -261,9 +265,10 @@
               </rules>
               <excludes>
                 <exclude>**/config/**</exclude>
-                <exclude>**/BookshopApplication*</exclude>
-                <exclude>**/BookshopRunner*</exclude>
-                <exclude>**/JdbcExecutor*</exclude>
+                <exclude>**/client/**</exclude>
+                <exclude>**/dto/**</exclude>
+                <exclude>**/model/**</exclude>
+                <exclude>**/repository/**</exclude>
               </excludes>
             </configuration>
           </execution>
