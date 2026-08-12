@@ -1,6 +1,7 @@
 package org.task.client;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.task.dto.response.BookResponse;
@@ -12,6 +13,7 @@ public class BookClient {
     private final RestClient restClient;
 
     public BookClient(
+            @LoadBalanced
             RestClient.Builder builder,
             @Value("${clients.book-service.url}") String bookServiceUrl
     ) {
