@@ -10,7 +10,7 @@ public class UserClient {
 
     public UserClient(
             RestClient.Builder builder,
-            @Value("${services.user-service.url}") String userServiceUrl
+            @Value("${clients.user-service.url}") String userServiceUrl
     ) {
         this.restClient = builder.baseUrl(userServiceUrl).build();
     }

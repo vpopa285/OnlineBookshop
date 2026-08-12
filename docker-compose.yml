@@ -1,4 +1,18 @@
 services:
+  eureka-server:
+    build:
+      context: .
+      dockerfile: eureka-server/Dockerfile
+    environment:
+      SERVER_PORT: ${EUREKA_SERVER_PORT}
+    ports:
+      - "${EUREKA_SERVER_PORT}:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/eureka/apps"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   book-db:
     image: postgres:16
     environment:
@@ -32,6 +46,8 @@ services:
       context: .
       dockerfile: book-service/Dockerfile
     depends_on:
+      eureka-server:
+        condition: service_healthy
       book-db:
         condition: service_healthy
     environment:
@@ -42,7 +58,7 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      USER_SERVICE_URL: ${USER_SERVICE_URL}
+      EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
     ports:
       - "${BOOK_SERVICE_PORT}:${BOOK_SERVICE_PORT}"
 
@@ -51,6 +67,8 @@ services:
       context: .
       dockerfile: user-service/Dockerfile
     depends_on:
+      eureka-server:
+        condition: service_healthy
       user-db:
         condition: service_healthy
     environment:
@@ -61,7 +79,7 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      BOOK_SERVICE_URL: ${BOOK_SERVICE_URL}
+      EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
     ports:
       - "${USER_SERVICE_PORT}:${USER_SERVICE_PORT}"
 

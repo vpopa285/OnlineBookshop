@@ -13,7 +13,7 @@ public class BookClient {
 
     public BookClient(
             RestClient.Builder builder,
-            @Value("${services.book-service.url}") String bookServiceUrl
+            @Value("${clients.book-service.url}") String bookServiceUrl
     ) {
         this.restClient = builder.baseUrl(bookServiceUrl).build();
     }
