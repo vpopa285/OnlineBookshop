@@ -1,6 +1,7 @@
 package org.task.client;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -19,8 +20,9 @@ public class ReviewClient {
     private final RestClient restClient;
 
     public ReviewClient(
+            @LoadBalanced
             RestClient.Builder builder,
-            @Value("${services.book-service.url}") String bookServiceUrl
+            @Value("${clients.book-service.url}") String bookServiceUrl
     ) {
         this.restClient = builder.baseUrl(bookServiceUrl).build();
     }
