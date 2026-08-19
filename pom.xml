@@ -13,6 +13,7 @@
     <module>book-service</module>
     <module>user-service</module>
     <module>eureka-server</module>
+    <module>api-gateway</module>
   </modules>
 
   <properties>
