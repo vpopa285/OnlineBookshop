@@ -1,6 +1,7 @@
 package org.task.service;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.task.client.BookClient;
 import org.task.client.ReviewClient;
 import org.task.dto.request.UserRequest;
@@ -28,12 +29,14 @@ class UserServiceTest {
     private final OrderItemRepository orderItemRepository = mock(OrderItemRepository.class);
     private final BookClient bookClient = mock(BookClient.class);
     private final ReviewClient reviewClient = mock(ReviewClient.class);
+    private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
     private final UserService userService = new UserService(
             userRepository,
             orderRepository,
             orderItemRepository,
             bookClient,
-            reviewClient
+            reviewClient,
+            passwordEncoder
     );
 
     @Test
@@ -130,6 +133,43 @@ class UserServiceTest {
         assertThat(response.id()).isEqualTo(2L);
         assertThat(response.content()).isEqualTo("Practical programming advice.");
     }
+
+    @Test
+    void shouldReturnAllReadableBooksWhenBooksWerePurchased() {
+        User user = User.builder().id(1L).username("reader").build();
+        Order firstOrder = new Order(user);
+        Order secondOrder = new Order(user);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(orderRepository.findAllByUserId(1L)).thenReturn(List.of(firstOrder, secondOrder));
+        when(orderItemRepository.findAllByOrder(firstOrder))
+                .thenReturn(List.of(new OrderItem(firstOrder, 1L)));
+        when(orderItemRepository.findAllByOrder(secondOrder))
+                .thenReturn(List.of(new OrderItem(secondOrder, 2L)));
+        when(bookClient.findById(1L)).thenReturn(Optional.of(new BookResponse(
+                1L,
+                "The Great Gatsby",
+                "F. Scott Fitzgerald",
+                "Classic",
+                "A Jazz Age story.",
+                12.99
+        )));
+        when(bookClient.findById(2L)).thenReturn(Optional.of(new BookResponse(
+                2L,
+                "Clean Code",
+                "Robert C. Martin",
+                "Programming",
+                "Practical programming advice.",
+                29.99
+        )));
+
+        var response = userService.findReadableBooks(1L);
+
+        assertThat(response).extracting("id").containsExactly(1L, 2L);
+        assertThat(response).extracting("content")
+                .containsExactly("A Jazz Age story.", "Practical programming advice.");
+    }
+
 
     @Test
     void shouldNotReturnReadableBookWhenBookWasNotPurchased() {
