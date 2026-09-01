@@ -24,6 +24,8 @@
     <h2-version>2.4.240</h2-version>
     <postgresql-version>42.7.8</postgresql-version>
     <hikari-version>7.0.2</hikari-version>
+    <logback-version>1.5.34</logback-version>
+    <logstash-logback-encoder-version>9.0</logstash-logback-encoder-version>
     <springboot-version>4.1.0</springboot-version>
     <spring-cloud-version>2025.1.2</spring-cloud-version>
   </properties>
@@ -125,7 +127,14 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.5.32</version>
+      <version>${logback-version}</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>net.logstash.logback</groupId>
+      <artifactId>logstash-logback-encoder</artifactId>
+      <version>${logstash-logback-encoder-version}</version>
       <scope>compile</scope>
     </dependency>
 
