@@ -13,11 +13,12 @@
     <module>book-service</module>
     <module>user-service</module>
     <module>eureka-server</module>
+    <module>api-gateway</module>
   </modules>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit-version>6.1.0</junit-version>
+    <junit-version>6.0.3</junit-version>
     <lombok-version>1.18.44</lombok-version>
     <mockito-version>5.23.0</mockito-version>
     <h2-version>2.4.240</h2-version>

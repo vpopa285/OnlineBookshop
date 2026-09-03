@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.task.exceptions.ExternalServiceUnavailableException;
 import org.task.exceptions.NotFoundException;
 
 import java.util.HashMap;
@@ -42,5 +43,12 @@ public class ExceptionsController {
             NotFoundException ex
     ) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(ExternalServiceUnavailableException.class)
+    public ResponseEntity<String> handleExternalServiceUnavailable(
+            ExternalServiceUnavailableException ex
+    ) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ex.getMessage());
     }
 }

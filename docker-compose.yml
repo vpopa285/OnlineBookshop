@@ -83,6 +83,23 @@ services:
     ports:
       - "${USER_SERVICE_PORT}:${USER_SERVICE_PORT}"
 
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      book-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+    environment:
+      SERVER_PORT: ${API_GATEWAY_PORT:-8080}
+      EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
+    ports:
+      - "${API_GATEWAY_PORT}:${API_GATEWAY_PORT}"
+
 volumes:
   book_postgres_data:
   user_postgres_data:
