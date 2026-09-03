@@ -18,17 +18,20 @@ public class UserClient {
     private final RestClient restClient;
     private final CircuitBreaker circuitBreaker;
     private final Retry retry;
+    private final ServiceTokenProvider serviceTokenProvider;
 
     public UserClient(
             @LoadBalanced
             RestClient.Builder builder,
             @Value("${clients.user-service.url}") String userServiceUrl,
             CircuitBreakerFactory<?, ?> circuitBreakerFactory,
-            RetryRegistry retryRegistry
+            RetryRegistry retryRegistry,
+            ServiceTokenProvider serviceTokenProvider
     ) {
         this.restClient = builder.baseUrl(userServiceUrl).build();
         this.circuitBreaker = circuitBreakerFactory.create("userService");
         this.retry = retryRegistry.retry("userServiceRead");
+        this.serviceTokenProvider = serviceTokenProvider;
     }
 
     public boolean existsById(Long userId) {
@@ -39,6 +42,7 @@ public class UserClient {
     private boolean doExistsById(Long userId) {
         return restClient.get()
                 .uri("/api/users/{id}", userId)
+                .headers(headers -> headers.setBearerAuth(serviceTokenProvider.token()))
                 .exchange((request, response) -> {
                     if (response.getStatusCode().is2xxSuccessful()) {
                         return true;

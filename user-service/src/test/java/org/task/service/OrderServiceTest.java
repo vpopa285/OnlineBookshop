@@ -5,6 +5,7 @@ import org.task.client.BookClient;
 import org.task.dto.request.OrderRequest;
 import org.task.dto.response.BookResponse;
 import org.task.exceptions.BookNotFoundException;
+import org.task.exceptions.OrderNotFoundException;
 import org.task.model.Order;
 import org.task.model.OrderItem;
 import org.task.model.User;
@@ -58,6 +59,45 @@ class OrderServiceTest {
 
         assertThat(response.user().id()).isEqualTo(1L);
         assertThat(response.books()).extracting(BookResponse::id).containsExactly(2L);
+    }
+
+    @Test
+    void shouldReturnOrderWhenItBelongsToUser() {
+        User user = User.builder().id(1L).username("user").build();
+        Order order = new Order(user);
+        order.setId(7L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(orderRepository.findById(7L)).thenReturn(Optional.of(order));
+        when(orderItemRepository.findAllByOrder(order))
+                .thenReturn(List.of(new OrderItem(order, 2L)));
+        when(bookClient.findById(2L)).thenReturn(Optional.of(new BookResponse(
+                2L,
+                "Book",
+                "Author",
+                "Genre",
+                "content",
+                10
+        )));
+
+        var response = orderService.findResponseByUserIdAndOrderId(1L, 7L);
+
+        assertThat(response.id()).isEqualTo(7L);
+        assertThat(response.user().id()).isEqualTo(1L);
+    }
+
+    @Test
+    void shouldNotReturnOrderWhenItDoesNotBelongToUser() {
+        User pathUser = User.builder().id(1L).username("path-user").build();
+        User orderUser = User.builder().id(2L).username("order-user").build();
+        Order order = new Order(orderUser);
+        order.setId(7L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(pathUser));
+        when(orderRepository.findById(7L)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.findResponseByUserIdAndOrderId(1L, 7L))
+                .isInstanceOf(OrderNotFoundException.class);
     }
 
     @Test

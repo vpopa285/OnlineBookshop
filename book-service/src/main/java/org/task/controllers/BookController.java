@@ -9,6 +9,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +40,7 @@ public class BookController {
     private final ReviewService reviewService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'SERVICE')")
     public ResponseEntity<PageResponse<BookResponse>> getBooks(
             @ModelAttribute BookFilter filter,
             @PageableDefault(
@@ -51,6 +53,7 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'SERVICE')")
     public ResponseEntity<BookResponse> getBook(
             @PathVariable @Positive Long id
     ) {
@@ -58,6 +61,7 @@ public class BookController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponse> createBook(
             @Valid @RequestBody BookRequest bookRequest
     ) {
@@ -66,6 +70,7 @@ public class BookController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponse> updateBook(
             @PathVariable @Positive Long id,
             @Valid @RequestBody BookRequest bookRequest
@@ -74,6 +79,7 @@ public class BookController {
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponse> updateBook(
             @PathVariable @Positive Long id,
             @Valid @RequestBody PriceUpdateRequest request
@@ -82,6 +88,7 @@ public class BookController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBook(
             @PathVariable @Positive Long id
     ) {
@@ -90,6 +97,7 @@ public class BookController {
     }
 
     @GetMapping("/{bookId}/reviews")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'SERVICE')")
     public ResponseEntity<List<ReviewResponse>> getBookReviews(
             @PathVariable @Positive Long bookId
     ) {
@@ -97,6 +105,8 @@ public class BookController {
     }
 
     @PostMapping("/{bookId}/reviews")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SERVICE')"
+            + " or @securityAuthorization.isSelf(#request.userId(), authentication)")
     public ResponseEntity<ReviewResponse> createBookReview(
             @PathVariable @Positive Long bookId,
             @Valid @RequestBody BookReviewRequest request

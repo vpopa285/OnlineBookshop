@@ -28,18 +28,21 @@ public class ReviewClient {
     private final CircuitBreaker circuitBreaker;
     private final Retry readRetry;
     private final Retry deleteRetry;
+    private final ServiceTokenProvider serviceTokenProvider;
 
     public ReviewClient(
             @LoadBalanced
             RestClient.Builder builder,
             @Value("${clients.book-service.url}") String bookServiceUrl,
             CircuitBreakerFactory<?, ?> circuitBreakerFactory,
-            RetryRegistry retryRegistry
+            RetryRegistry retryRegistry,
+            ServiceTokenProvider serviceTokenProvider
     ) {
         this.restClient = builder.baseUrl(bookServiceUrl).build();
         this.circuitBreaker = circuitBreakerFactory.create("bookReviewService");
         this.readRetry = retryRegistry.retry("bookReviewServiceRead");
         this.deleteRetry = retryRegistry.retry("bookReviewServiceDelete");
+        this.serviceTokenProvider = serviceTokenProvider;
     }
 
     public List<ReviewResponse> findByUserId(Long userId) {
@@ -51,6 +54,7 @@ public class ReviewClient {
     private List<ReviewResponse> doFindByUserId(Long userId) {
         return restClient.get()
                 .uri("/api/reviews/users/{userId}", userId)
+                .headers(headers -> headers.setBearerAuth(serviceTokenProvider.token()))
                 .retrieve()
                 .body(REVIEW_LIST_TYPE);
     }
@@ -71,6 +75,7 @@ public class ReviewClient {
 
         return restClient.post()
                 .uri("/api/books/{bookId}/reviews", request.bookId())
+                .headers(headers -> headers.setBearerAuth(serviceTokenProvider.token()))
                 .body(bookReviewRequest)
                 .exchange((httpRequest, response) -> {
                     if (response.getStatusCode().is2xxSuccessful()) {
@@ -97,6 +102,7 @@ public class ReviewClient {
     private void doDeleteByUserId(Long userId) {
         restClient.delete()
                 .uri("/api/reviews/users/{userId}", userId)
+                .headers(headers -> headers.setBearerAuth(serviceTokenProvider.token()))
                 .retrieve()
                 .toBodilessEntity();
     }

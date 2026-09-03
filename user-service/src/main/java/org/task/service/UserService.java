@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.task.client.BookClient;
@@ -26,7 +27,7 @@ import org.task.repositories.OrderItemRepository;
 import org.task.repositories.OrderRepository;
 import org.task.repositories.UserRepository;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -39,6 +40,7 @@ public class UserService {
     private final OrderItemRepository orderItemRepository;
     private final BookClient bookClient;
     private final ReviewClient reviewClient;
+    private final PasswordEncoder passwordEncoder;
 
     public void create(User user) {
         userRepository.save(user);
@@ -86,7 +88,7 @@ public class UserService {
                 id,
                 request.username(),
                 request.email(),
-                request.password(),
+                passwordEncoder.encode(request.password()),
                 existingUser.getAmount(),
                 existingUser.isRestriction(),
                 existingUser.isAdmin()
@@ -123,13 +125,19 @@ public class UserService {
             throw new BookNotFoundException(bookId);
         }
 
-        return new BookReadResponse(
-                book.id(),
-                book.title(),
-                book.author(),
-                book.genre(),
-                book.content()
-        );
+        return toBookReadResponse(book);
+    }
+
+    public List<BookReadResponse> findReadableBooks(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
+        return getPurchasedBookIds(user)
+                .stream()
+                .map(bookId -> bookClient.findById(bookId)
+                        .orElseThrow(() -> new BookNotFoundException(bookId)))
+                .map(UserService::toBookReadResponse)
+                .toList();
     }
 
     @Transactional
@@ -167,7 +175,7 @@ public class UserService {
     public Set<Long> getPurchasedBookIds(User user) {
         List<Order> orders = orderRepository.findAllByUserId(user.getId());
 
-        Set<Long> bookIds = new HashSet<>();
+        Set<Long> bookIds = new LinkedHashSet<>();
 
         for (Order order : orders) {
             List<OrderItem> items = orderItemRepository.findAllByOrder(order);
@@ -209,7 +217,7 @@ public class UserService {
         return User.builder()
                 .username(request.username())
                 .email(request.email())
-                .password(request.password())
+                .password(passwordEncoder.encode(request.password()))
                 .amount(0)
                 .restriction(false)
                 .isAdmin(false)
@@ -222,6 +230,16 @@ public class UserService {
                 user.getUsername(),
                 user.getEmail(),
                 user.isRestriction()
+        );
+    }
+
+    private static BookReadResponse toBookReadResponse(BookResponse book) {
+        return new BookReadResponse(
+                book.id(),
+                book.title(),
+                book.author(),
+                book.genre(),
+                book.content()
         );
     }
 }
