@@ -47,6 +47,18 @@ public class OrderService {
                 .orElseThrow(() -> new OrderNotFoundException(id));
     }
 
+    public OrderResponse findResponseByUserIdAndOrderId(Long userId, Long orderId) {
+        userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+        if (!order.getUser().getId().equals(userId)) {
+            throw new OrderNotFoundException(orderId);
+        }
+
+        return toResponse(order);
+    }
+
     public List<OrderResponse> findResponsesByUserId(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
 
@@ -67,6 +79,10 @@ public class OrderService {
         orderItemRepository.save(new OrderItem(order, book.id()));
 
         return toResponse(order);
+    }
+
+    public OrderResponse createForUser(Long userId, Long bookId) {
+        return create(new OrderRequest(userId, bookId));
     }
 
     private OrderResponse toResponse(Order order) {

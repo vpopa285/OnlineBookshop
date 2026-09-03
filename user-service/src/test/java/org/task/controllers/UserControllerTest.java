@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -141,6 +143,90 @@ class UserControllerTest {
     }
 
     @Test
+    void shouldRunCurrentUserHappyPaths() throws Exception {
+        when(reviewClient.findByUserId(1L)).thenReturn(List.of(new ReviewResponse(
+                1L,
+                1L,
+                1L,
+                5,
+                "Great."
+        )));
+        when(reviewClient.createForUser(any(), any())).thenReturn(Optional.of(new ReviewResponse(
+                2L,
+                1L,
+                2L,
+                4,
+                "Strong read."
+        )));
+
+        mockMvc.perform(get("/users/me").principal(jwtUser(1L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("alice_reads"));
+
+        mockMvc.perform(get("/users/me/reviews").principal(jwtUser(1L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
+
+        mockMvc.perform(post("/users/me/reviews")
+                        .principal(jwtUser(1L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "bookId": 2,
+                                  "rate": 4,
+                                  "comment": "Strong read."
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.userId").value(1))
+                .andExpect(jsonPath("$.bookId").value(2));
+
+        mockMvc.perform(get("/users/me/orders").principal(jwtUser(1L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
+
+        mockMvc.perform(get("/users/me/orders/1").principal(jwtUser(1L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1));
+
+        mockMvc.perform(get("/users/me/orders/2").principal(jwtUser(1L)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$").value("Order with id 2 does not exist"));
+
+        mockMvc.perform(post("/users/me/orders")
+                        .principal(jwtUser(1L))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookId\":2}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.user.id").value(1))
+                .andExpect(jsonPath("$.books[0].id").value(2));
+
+        mockMvc.perform(get("/users/me/books").principal(jwtUser(1L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)));
+
+        mockMvc.perform(get("/users/me/books/1").principal(jwtUser(1L)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value("A Jazz Age story."));
+    }
+
+    @Test
+    void shouldRunNestedUserBookAndOrderLookups() throws Exception {
+        mockMvc.perform(get("/users/1/books"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(1));
+
+        mockMvc.perform(get("/users/1/orders/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1));
+
+        mockMvc.perform(get("/users/1/orders/2"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$").value("Order with id 2 does not exist"));
+    }
+
+    @Test
     void shouldKeepApiUserPrefixWorking() throws Exception {
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
@@ -226,5 +312,14 @@ class UserControllerTest {
                 "Practical programming advice.",
                 29.99
         )));
+    }
+
+    private JwtAuthenticationToken jwtUser(Long userId) {
+        Jwt jwt = Jwt.withTokenValue("token")
+                .header("alg", "HS256")
+                .subject("user-" + userId)
+                .claim("user_id", userId)
+                .build();
+        return new JwtAuthenticationToken(jwt);
     }
 }

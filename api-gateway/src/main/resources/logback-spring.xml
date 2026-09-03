@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+  <springProperty scope="context" name="applicationName" source="spring.application.name"/>
+
+  <contextName>${applicationName}</contextName>
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <springProfile name="prod">
+    <springProperty scope="context" name="logstashHost" source="logging.logstash.host"/>
+    <springProperty scope="context" name="logstashPort" source="logging.logstash.port"/>
+    <springProperty scope="context" name="logEnvironment" source="logging.logstash.environment"/>
+
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+      <destination>${logstashHost}:${logstashPort}</destination>
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <customFields>{"application":"${applicationName}","environment":"${logEnvironment}"}</customFields>
+      </encoder>
+    </appender>
+
+    <root level="${LOG_LEVEL}">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="LOGSTASH"/>
+    </root>
+  </springProfile>
+
+  <springProfile name="!prod">
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+</configuration>

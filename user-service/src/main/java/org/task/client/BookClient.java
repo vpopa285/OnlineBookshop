@@ -20,17 +20,20 @@ public class BookClient {
     private final RestClient restClient;
     private final CircuitBreaker circuitBreaker;
     private final Retry retry;
+    private final ServiceTokenProvider serviceTokenProvider;
 
     public BookClient(
             @LoadBalanced
             RestClient.Builder builder,
             @Value("${clients.book-service.url}") String bookServiceUrl,
             CircuitBreakerFactory<?, ?> circuitBreakerFactory,
-            RetryRegistry retryRegistry
+            RetryRegistry retryRegistry,
+            ServiceTokenProvider serviceTokenProvider
     ) {
         this.restClient = builder.baseUrl(bookServiceUrl).build();
         this.circuitBreaker = circuitBreakerFactory.create("bookService");
         this.retry = retryRegistry.retry("bookServiceRead");
+        this.serviceTokenProvider = serviceTokenProvider;
     }
 
     public Optional<BookResponse> findById(Long bookId) {
@@ -42,6 +45,7 @@ public class BookClient {
     private Optional<BookResponse> doFindById(Long bookId) {
         return restClient.get()
                 .uri("/api/books/{id}", bookId)
+                .headers(headers -> headers.setBearerAuth(serviceTokenProvider.token()))
                 .exchange((request, response) -> {
                     if (response.getStatusCode().is2xxSuccessful()) {
                         return Optional.ofNullable(response.bodyTo(BookResponse.class));
