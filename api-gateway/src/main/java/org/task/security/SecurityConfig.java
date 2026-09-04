@@ -31,6 +31,7 @@ public class SecurityConfig {
                                 "/auth/**",
                                 "/fallback/**",
                                 "/actuator/health",
+                                "/actuator/prometheus",
                                 "/error"
                         ).permitAll()
                         .anyRequest().authenticated())

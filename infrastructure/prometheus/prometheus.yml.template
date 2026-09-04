@@ -1,0 +1,33 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - localhost:9090
+
+  - job_name: api-gateway
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - api-gateway:__API_GATEWAY_PORT__
+
+  - job_name: book-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - book-service:__BOOK_SERVICE_PORT__
+
+  - job_name: user-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - user-service:__USER_SERVICE_PORT__
+
+  - job_name: eureka-server
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - eureka-server:__EUREKA_SERVER_PORT__

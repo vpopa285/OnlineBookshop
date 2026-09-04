@@ -1,0 +1,8 @@
+.git
+.idea
+.env
+target
+api-gateway/target
+book-service/target
+user-service/target
+*.iml
