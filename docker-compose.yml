@@ -98,6 +98,11 @@ services:
       - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./infrastructure/grafana/dashboards:/var/lib/grafana/dashboards:ro
 
+  zipkin:
+    image: openzipkin/zipkin:${ZIPKIN_VERSION}
+    ports:
+      - "${ZIPKIN_PORT}:9411"
+
   eureka-server:
     build:
       context: .
@@ -105,9 +110,13 @@ services:
     depends_on:
       logstash:
         condition: service_healthy
+      zipkin:
+        condition: service_healthy
     environment:
       SERVER_PORT: ${EUREKA_SERVER_PORT}
       ACTIVE_PROFILE: ${ACTIVE_PROFILE}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT}
+      TRACING_SAMPLING_PROBABILITY: ${TRACING_SAMPLING_PROBABILITY}
       LOGSTASH_HOST: logstash
       LOGSTASH_PORT: 5005
       LOG_LEVEL: ${LOG_LEVEL}
@@ -158,6 +167,8 @@ services:
         condition: service_healthy
       logstash:
         condition: service_healthy
+      zipkin:
+        condition: service_healthy
     environment:
       ACTIVE_PROFILE: ${ACTIVE_PROFILE}
       SERVER_PORT: ${BOOK_SERVICE_PORT}
@@ -169,6 +180,8 @@ services:
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
       USER_SERVICE_URL: ${USER_SERVICE_URL}
       JWT_SECRET: ${JWT_SECRET}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT}
+      TRACING_SAMPLING_PROBABILITY: ${TRACING_SAMPLING_PROBABILITY}
       LOGSTASH_HOST: logstash
       LOGSTASH_PORT: 5005
       LOG_LEVEL: ${LOG_LEVEL}
@@ -192,6 +205,8 @@ services:
         condition: service_healthy
       logstash:
         condition: service_healthy
+      zipkin:
+        condition: service_healthy
     environment:
       ACTIVE_PROFILE: ${ACTIVE_PROFILE}
       SERVER_PORT: ${USER_SERVICE_PORT}
@@ -203,6 +218,8 @@ services:
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
       BOOK_SERVICE_URL: ${BOOK_SERVICE_URL}
       JWT_SECRET: ${JWT_SECRET}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT}
+      TRACING_SAMPLING_PROBABILITY: ${TRACING_SAMPLING_PROBABILITY}
       LOGSTASH_HOST: logstash
       LOGSTASH_PORT: 5005
       LOG_LEVEL: ${LOG_LEVEL}
@@ -228,11 +245,15 @@ services:
         condition: service_healthy
       logstash:
         condition: service_healthy
+      zipkin:
+        condition: service_healthy
     environment:
       ACTIVE_PROFILE: ${ACTIVE_PROFILE}
       SERVER_PORT: ${API_GATEWAY_PORT}
       EUREKA_SERVER_URL: ${EUREKA_SERVER_URL}
       JWT_SECRET: ${JWT_SECRET}
+      ZIPKIN_ENDPOINT: ${ZIPKIN_ENDPOINT}
+      TRACING_SAMPLING_PROBABILITY: ${TRACING_SAMPLING_PROBABILITY}
       LOGSTASH_HOST: logstash
       LOGSTASH_PORT: 5005
       LOG_LEVEL: ${LOG_LEVEL}
